@@ -1,0 +1,83 @@
+device: mps
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights: 100%|██████████| 199/199 [00:00<00:00, 18072.63it/s]
+[transformers] [1mBertForSequenceClassification LOAD REPORT[0m from: /Users/mac/Programming/code-2026/Middle-Eigen-function/models/AI-ModelScope/bert-base-uncased
+Key                                        | Status     | 
+-------------------------------------------+------------+-
+cls.seq_relationship.bias                  | UNEXPECTED | 
+cls.predictions.transform.dense.bias       | UNEXPECTED | 
+cls.predictions.transform.LayerNorm.weight | UNEXPECTED | 
+cls.predictions.bias                       | UNEXPECTED | 
+cls.predictions.transform.LayerNorm.bias   | UNEXPECTED | 
+cls.predictions.transform.dense.weight     | UNEXPECTED | 
+cls.seq_relationship.weight                | UNEXPECTED | 
+classifier.weight                          | MISSING    | 
+classifier.bias                            | MISSING    | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
+init output-equivalence max|Δlogit| = 0.00e+00
+
+===== baseline =====
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights: 100%|██████████| 199/199 [00:00<00:00, 15401.17it/s]
+[transformers] [1mBertForSequenceClassification LOAD REPORT[0m from: /Users/mac/Programming/code-2026/Middle-Eigen-function/models/AI-ModelScope/bert-base-uncased
+Key                                        | Status     | 
+-------------------------------------------+------------+-
+cls.seq_relationship.bias                  | UNEXPECTED | 
+cls.predictions.transform.dense.bias       | UNEXPECTED | 
+cls.predictions.transform.LayerNorm.weight | UNEXPECTED | 
+cls.predictions.bias                       | UNEXPECTED | 
+cls.predictions.transform.LayerNorm.bias   | UNEXPECTED | 
+cls.predictions.transform.dense.weight     | UNEXPECTED | 
+cls.seq_relationship.weight                | UNEXPECTED | 
+classifier.weight                          | MISSING    | 
+classifier.bias                            | MISSING    | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
+RTE sizes: train=2489 dev=277
+RTE small-data train: 249 samples (10%)
+[baseline] ep1 train_loss=0.663 train_acc=0.631 dev_loss=0.694 dev_acc=0.466
+[baseline] ep2 train_loss=0.594 train_acc=0.803 dev_loss=0.694 dev_acc=0.480
+[baseline] ep3 train_loss=0.480 train_acc=0.904 dev_loss=0.688 dev_acc=0.570
+[baseline] ep4 train_loss=0.310 train_acc=0.976 dev_loss=0.759 dev_acc=0.534
+[baseline] ep5 train_loss=0.160 train_acc=0.988 dev_loss=0.817 dev_acc=0.527
+[baseline] ep6 train_loss=0.065 train_acc=0.992 dev_loss=0.950 dev_acc=0.563
+[baseline] ep7 train_loss=0.037 train_acc=0.992 dev_loss=1.244 dev_acc=0.570
+[baseline] ep8 train_loss=0.032 train_acc=0.988 dev_loss=1.413 dev_acc=0.556
+{"expand_recruit": 0.56, "baseline": 0.57}
+
+===== expand_recruit_fast =====
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights: 100%|██████████| 199/199 [00:00<00:00, 20112.93it/s]
+[transformers] [1mBertForSequenceClassification LOAD REPORT[0m from: /Users/mac/Programming/code-2026/Middle-Eigen-function/models/AI-ModelScope/bert-base-uncased
+Key                                        | Status     | 
+-------------------------------------------+------------+-
+cls.seq_relationship.bias                  | UNEXPECTED | 
+cls.predictions.transform.dense.bias       | UNEXPECTED | 
+cls.predictions.transform.LayerNorm.weight | UNEXPECTED | 
+cls.predictions.bias                       | UNEXPECTED | 
+cls.predictions.transform.LayerNorm.bias   | UNEXPECTED | 
+cls.predictions.transform.dense.weight     | UNEXPECTED | 
+cls.seq_relationship.weight                | UNEXPECTED | 
+classifier.weight                          | MISSING    | 
+classifier.bias                            | MISSING    | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
+RTE sizes: train=2489 dev=277
+RTE small-data train: 249 samples (10%)
+[expand_recruit_fast] ep1 train_loss=0.662 train_acc=0.586 dev_loss=0.702 dev_acc=0.458
+[expand_recruit_fast] ep2 train_loss=0.567 train_acc=0.779 dev_loss=0.725 dev_acc=0.487
+[expand_recruit_fast] ep3 train_loss=0.379 train_acc=0.948 dev_loss=0.735 dev_acc=0.469
+[expand_recruit_fast] ep4 train_loss=0.181 train_acc=0.976 dev_loss=0.833 dev_acc=0.516
+[expand_recruit_fast] ep5 train_loss=0.084 train_acc=0.988 dev_loss=1.109 dev_acc=0.480
+[expand_recruit_fast] ep6 train_loss=0.045 train_acc=0.988 dev_loss=1.402 dev_acc=0.466
+[expand_recruit_fast] ep7 train_loss=0.032 train_acc=0.988 dev_loss=1.718 dev_acc=0.462
+[expand_recruit_fast] ep8 train_loss=0.023 train_acc=0.988 dev_loss=1.842 dev_acc=0.516
+/Users/mac/Programming/code-2026/Middle-Eigen-function/scripts/stage6_expand.py:66: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /Users/runner/work/pytorch/pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:821.)
+  return {f"layer.{i}": float(torch.tanh(l.alpha).abs())
+{"expand_recruit": 0.56, "baseline": 0.57, "expand_recruit_fast": 0.516}
+saved: outputs/stage6_expand
