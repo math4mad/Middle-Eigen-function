@@ -1,72 +1,0 @@
-device: mps model: /Users/mac/Programming/code-2026/Middle-Eigen-function/models/models/Qwen--Qwen2.5-0.5B/snapshots/master
-qwen RTE: train=249 dev=277
-
-===== group baseline =====
-Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]Loading weights: 100%|██████████| 290/290 [00:00<00:00, 3216.75it/s]
-[transformers] [1mQwen2ForSequenceClassification LOAD REPORT[0m from: /Users/mac/Programming/code-2026/Middle-Eigen-function/models/models/Qwen--Qwen2.5-0.5B/snapshots/master
-Key          | Status  | 
--------------+---------+-
-score.weight | MISSING | 
-
-Notes:
-- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
-group baseline: trainable params 4,400,896
-[baseline] ep1 train_loss=0.927 train_acc=0.570 dev_loss=1.446 dev_acc=0.444
-[baseline] ep2 train_loss=0.665 train_acc=0.691 dev_loss=1.199 dev_acc=0.473
-[baseline] ep3 train_loss=0.487 train_acc=0.755 dev_loss=1.051 dev_acc=0.498
-[baseline] ep4 train_loss=0.285 train_acc=0.876 dev_loss=1.120 dev_acc=0.505
-[baseline] ep5 train_loss=0.119 train_acc=0.964 dev_loss=1.182 dev_acc=0.527
-
-===== group A =====
-Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]Loading weights: 100%|██████████| 290/290 [00:00<00:00, 3176.03it/s]
-[transformers] [1mQwen2ForSequenceClassification LOAD REPORT[0m from: /Users/mac/Programming/code-2026/Middle-Eigen-function/models/models/Qwen--Qwen2.5-0.5B/snapshots/master
-Key          | Status  | 
--------------+---------+-
-score.weight | MISSING | 
-
-Notes:
-- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
-group A: trainable params 4,400,896
-[A] ep1 train_loss=1.301 train_acc=0.482 dev_loss=1.514 dev_acc=0.458
-[A] ep2 train_loss=0.870 train_acc=0.562 dev_loss=1.258 dev_acc=0.462
-[A] ep3 train_loss=0.552 train_acc=0.727 dev_loss=1.101 dev_acc=0.448
-[A] ep4 train_loss=0.354 train_acc=0.831 dev_loss=1.219 dev_acc=0.451
-[A] ep5 train_loss=0.174 train_acc=0.968 dev_loss=1.183 dev_acc=0.448
-
-===== group B =====
-Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]Loading weights:   0%|          | 1/290 [00:00<01:36,  2.99it/s]Loading weights: 100%|██████████| 290/290 [00:00<00:00, 751.76it/s]
-[transformers] [1mQwen2ForSequenceClassification LOAD REPORT[0m from: /Users/mac/Programming/code-2026/Middle-Eigen-function/models/models/Qwen--Qwen2.5-0.5B/snapshots/master
-Key          | Status  | 
--------------+---------+-
-score.weight | MISSING | 
-
-Notes:
-- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
-group B: trainable params 4,400,896
-[B] ep1 train_loss=0.764 train_acc=0.707 dev_loss=1.335 dev_acc=0.578
-[B] ep2 train_loss=0.254 train_acc=0.912 dev_loss=1.225 dev_acc=0.552
-[B] ep3 train_loss=0.081 train_acc=0.972 dev_loss=1.330 dev_acc=0.556
-[B] ep4 train_loss=0.017 train_acc=1.000 dev_loss=1.449 dev_acc=0.556
-[B] ep5 train_loss=0.002 train_acc=1.000 dev_loss=1.435 dev_acc=0.581
-
-===== group C =====
-Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]Loading weights:   0%|          | 1/290 [00:00<01:29,  3.24it/s]Loading weights: 100%|██████████| 290/290 [00:00<00:00, 884.22it/s]
-[transformers] [1mQwen2ForSequenceClassification LOAD REPORT[0m from: /Users/mac/Programming/code-2026/Middle-Eigen-function/models/models/Qwen--Qwen2.5-0.5B/snapshots/master
-Key          | Status  | 
--------------+---------+-
-score.weight | MISSING | 
-
-Notes:
-- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
-group C: trainable params 4,400,896
-[C] ep1 train_loss=1.117 train_acc=0.566 dev_loss=1.453 dev_acc=0.498
-[C] ep2 train_loss=0.867 train_acc=0.639 dev_loss=1.248 dev_acc=0.531
-[C] ep3 train_loss=0.457 train_acc=0.807 dev_loss=1.258 dev_acc=0.484
-[C] ep4 train_loss=0.249 train_acc=0.904 dev_loss=1.355 dev_acc=0.502
-[C] ep5 train_loss=0.167 train_acc=0.920 dev_loss=1.576 dev_acc=0.491
-
-final dev accuracy:
-  baseline  dev_acc=0.527 (best ep 5)
-  A         dev_acc=0.462 (best ep 2)
-  B         dev_acc=0.581 (best ep 5)
-  C         dev_acc=0.531 (best ep 2)
