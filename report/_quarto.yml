@@ -16,6 +16,8 @@ website:
         text: "Hybrid Splice"
       - file: notes/junk-dna.qmd
         text: "Junk-DNA Expansion"
+      - file: notes/cross-size.qmd
+        text: "Cross-Size Pad"
       - href: https://github.com/math4mad/Middle-Eigen-function
         text: GitHub
   repo-url: https://github.com/math4mad/Middle-Eigen-function

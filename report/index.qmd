@@ -34,4 +34,5 @@ date: last-modified
 2. [**Multi-Model**](notes/multi-model.qmd) —— 阶段二：RoBERTa/ELECTRA/DistilBERT/Qwen2.5-0.5B(LoRA) 跨架构复验 + 等能量对照。
 3. [**Hybrid Splice**](notes/hybrid.qmd) —— 阶段三：跨模型谱拼接杂交（top 段来自 X + middle 段来自 Y），检验中段谱的可移植性。
 4. [**Junk-DNA Expansion**](notes/junk-dna.qmd) —— 阶段六：门控层复制把 109M 扩到 195M，"补齐参数拼大模型"能否产生新能力？
+5. [**Cross-Size Pad**](notes/cross-size.qmd) —— 阶段七：零填充打通尺寸差异，做"跨公司跨尺寸"杂交 —— 含随机旋转/能量配平/纯噪声三重对照。
 2. 复现代码见仓库 [`scripts/`](https://github.com/math4mad/Middle-Eigen-function) 目录。
