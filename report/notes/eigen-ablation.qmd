@@ -94,6 +94,8 @@ import pandas as pd
 微调后权重差 $\Delta W = W_{ft}-W_0$ 的奇异方向，与 $W_0$ 原谱方向的夹角余弦
 加权直方图（按原谱秩的十分位）：
 
+![](/figs/invasion_B.png)
+
 ```{python}
 #| echo: false
 fig, axes = plt.subplots(1, 4, figsize=(13, 3), sharey=True)
