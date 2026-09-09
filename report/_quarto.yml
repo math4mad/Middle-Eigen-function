@@ -14,6 +14,8 @@ website:
         text: "Multi-Model"
       - file: notes/hybrid.qmd
         text: "Hybrid Splice"
+      - file: notes/junk-dna.qmd
+        text: "Junk-DNA Expansion"
       - href: https://github.com/math4mad/Middle-Eigen-function
         text: GitHub
   repo-url: https://github.com/math4mad/Middle-Eigen-function

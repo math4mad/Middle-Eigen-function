@@ -1,0 +1,136 @@
+---
+title: "junk DNA 扩展：给小模型「补齐」惰性参数，能长出大模型能力吗？"
+subtitle: "Gated layer-duplication expansion of bert-base · RTE 10% few-shot"
+author: "math4mad"
+format:
+  html:
+    echo: true
+    warning: false
+jupyter: python3
+---
+
+```{python}
+#| include: false
+import json, os
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from great_tables import GT, html
+
+ROOT = next(p for p in ["../..", "..", "."] if os.path.isdir(os.path.join(p, "outputs", "stage6_expand")))
+R = json.load(open(f"{ROOT}/outputs/stage6_expand/results.json"))
+```
+
+# 1. 问题（stage6.md）
+
+> **假设**：小模型的 head 部分构成大模型的对应头部；小模型的中间部分组合了泛化的大部分学习能力。
+> **方法**：有没有办法"补齐"参数（不影响功能）再拼成更大规模的模型？现在的大模型是不是就这么造的？
+> **生物类比**：补齐的部分 ≈ 基因中的非编码区（junk DNA）。
+
+# 2. 方法学答案（先回答"有没有这种方法"）
+
+**有，且是一个真实的研究族**，术语叫 **model expansion / up-scaling**：
+
+| 技术 | 做法 | 使用者 |
+|---|---|---|
+| DEG / layer-stacking (Chen+2015) | 复制已有层堆深 | CV 早期 |
+| **DUS**（Depth Up-Scaling, Yang+2022 EMNLP） | 按幂律复制插入层再微调 | 开源社区常用 |
+| **LLaMA Pro** (2024) | 8B→16B：新增更深层，旧权重冻结、新层带门控初始化 | 商业模型 |
+| **MoE upcycling**（Gupta+2021 DeepM6E、OlmOnE 等） | dense FFN 复制拆成多专家 | LLM 实验线 |
+
+但**主流前沿 dense LLM 仍是按目标规模从零训练**——扩展法省算力但上限受小模型先验限制，
+这正是本实验要直接测量的东西。
+
+# 3. 实验设计：门控层复制（junk-DNA expansion）
+
+对 BERT-base 的每个 encoder 层 $L_i$ 复制一份"惰性双胞胎" $J_i$（权重=拷贝，即垃圾参数），
+前向改为
+
+$$h \leftarrow L_i(h);\qquad h \leftarrow h + \tanh(\alpha_i)\cdot J_i(h),\qquad \alpha_i := 0$$
+
+- **初始化时函数严格保持**：实测 max|Δlogit| = **0.00e+00**（脚本内 assert 验证）
+- 参数量 109M → **195M（+78%）**，多出的 86M 全是"非编码区"
+- 训练组：
+  - `baseline`：不扩展（同代码路径，恒定 lr 2e-5）
+  - `expand_frozen`：门恒 0 —— junk 在场但永远不可达（纯"非编码"对照）
+  - `expand_recruit`：门以普通 lr 2e-5 训练（自然征用）
+  - `expand_recruit_fast`：门以 lr 0.05 高速开闸（强制征用 junk）
+
+# 4. 结果
+
+```{python}
+#| echo: false
+order = ["baseline", "expand_frozen", "expand_recruit", "expand_recruit_fast"]
+rows = []
+for g in order:
+    if g not in R: continue
+    b = R[g]["best"]; f = R[g]["final"]
+    gm = list(R[g]["gates"].values()) if R[g].get("gates") else None
+    rows.append({"组": g, "参数量(M)": round(R[g]["n_params"]/1e6),
+                 "best dev": round(b["dev_acc"], 3),
+                 "final train loss": round(f["train_loss"], 4),
+                 "final dev loss": round(f["dev_loss"], 2),
+                 "门开度 mean|max": (f"{np.mean(gm):.2f}|{np.max(gm):.2f}" if gm else "—")})
+(GT(pd.DataFrame(rows)).tab_header(
+    title=html("junk-DNA 扩展 vs 基线（RTE 10%，同数据同超参）"),
+    subtitle=html("dev=277 条；±0.03 视为噪声带")))
+```
+
+```{python}
+#| echo: false
+fig, axes = plt.subplots(1, 2, figsize=(11, 4))
+cols = {"baseline": "#2c3e50", "expand_frozen": "#95a5a6",
+        "expand_recruit": "#f39c12", "expand_recruit_fast": "#c0392b"}
+for g in order:
+    if g not in R: continue
+    h = R[g]["history"]
+    axes[0].plot([x["epoch"] for x in h], [x["train_loss"] for x in h], "o-", ms=3,
+                 color=cols[g], label=g)
+    axes[1].plot([x["epoch"] for x in h], [x["dev_acc"] for x in h], "o-", ms=3,
+                 color=cols[g], label=g)
+axes[0].set_title("train loss"); axes[1].set_title("dev accuracy")
+axes[1].axhline(0.5, color="k", ls=":", lw=0.8)
+for a in axes: a.set_xlabel("epoch"); a.legend(fontsize=7); a.grid(alpha=0.3)
+fig.tight_layout(); display(fig)
+```
+
+**四个读数：**
+
+1. **拼接无害**：`expand_frozen` 与 `baseline` 完全一致（0.570 = 0.570，逐 epoch 重合）——
+   86M 惰性参数可以原地存在而不扰动任何功能。junk DNA 是**沉默且良性的**。
+2. **自然征用几乎不发生**：普通 lr 下门只开到 0.002（128 步 × 2e-5 的移动上限）——
+   小样本微调根本"懒得"启用复制品；dev 0.560 ≈ 基线。
+3. **强制征用有害**：GATE_LR=0.05 后门开到 mean 0.39 / max 0.96（复制品真的进了计算图），
+   结果 dev **0.516（掉 5.4 点）**、final dev loss 1.84（全场最过拟合）。
+   多出的 86M 参数提供的是**记忆自由度**，不是泛化能力。
+4. 各层门开度不均匀（深层 L10-11 更易被征用）——但任何层的征用都没换来 dev 收益。
+
+# 5. 对 stage6 假设的回答
+
+:::{.callout-warning}
+- **"补齐参数→大模型能力"：不成立。** 函数保持的参数膨胀（1×→1.78×）在小样本任务上：
+  沉默时无增益，征用时反而伤害泛化。**能力不是参数量**。
+- **"小模型的 head = 大模型的 head"：与 Stage4 一致地否定。** 杂交实验已证明不同模型的
+  top 子空间几乎正交（重叠 0.134 < 随机基线 0.316）——把一个模型的骨架"放大"不会得到
+  另一个模型的骨架；骨架坐标系是每个模型私有的。
+- **"中间部组合泛化学习能力"：需要第三个限定词。** 本实验的 junk 块是已用方向的**复制品**——
+  它们的中段谱不携带任何新信息，征用它们当然无用。结合 Stage4（同血缘中段可零损耗移植、
+  异血缘不可移植）：**泛化储备 = 本模型(或同血缘模型)中段谱里的方向，而不是"更多参数"。**
+- 生物对应更新：复制一段已表达的基因（gene duplication 且无序列分化）不产生新功能——
+  进化要靠**有新内容的重复**（外源片段/变异），正对应"中段必须来自训练过的轨迹"。
+:::
+
+# 6. 与主流实践的分歧点（为什么 LLaMA Pro 们能成）
+
+LLaMA Pro / DUS 的成功有两个本实验缺失的条件，值得下一步补：
+① 新增参数不是**原地复制**而是配**大规模新语料**（我们的 249 条喂不饱 86M 新参数，
+必然过拟合）；② 冻结旧权重只训新段（避免协同漂移）。本实验的 `expand_recruit_fast`
+相当于反例：全参数 + 249 样本 + 复制品 → 证伪的是"小数据下参数膨胀无用"，
+不排除大数据下有收益——这本身就是下一步（在 STS-B/MNLI 大子集上复跑扩展实验）。
+
+## 复现
+
+```bash
+python scripts/stage6_expand.py baseline expand_frozen          # 默认门 lr
+GATE_LR=0.05 python scripts/stage6_expand.py expand_recruit_fast # 高速开闸
+```

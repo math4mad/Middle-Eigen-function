@@ -33,4 +33,5 @@ date: last-modified
 1. [**Ablation Note (BERT)**](notes/eigen-ablation.qmd) —— 首轮完整实验记录：谱分布、四组训练曲线、准确率/泛化误差表、"入侵维度"分析。
 2. [**Multi-Model**](notes/multi-model.qmd) —— 阶段二：RoBERTa/ELECTRA/DistilBERT/Qwen2.5-0.5B(LoRA) 跨架构复验 + 等能量对照。
 3. [**Hybrid Splice**](notes/hybrid.qmd) —— 阶段三：跨模型谱拼接杂交（top 段来自 X + middle 段来自 Y），检验中段谱的可移植性。
+4. [**Junk-DNA Expansion**](notes/junk-dna.qmd) —— 阶段六：门控层复制把 109M 扩到 195M，"补齐参数拼大模型"能否产生新能力？
 2. 复现代码见仓库 [`scripts/`](https://github.com/math4mad/Middle-Eigen-function) 目录。
