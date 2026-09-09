@@ -1,0 +1,8 @@
+/* report/styles.css */
+.quarto-title-banner {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+.callout-no-shadow { box-shadow: none; }
+figure img { border: 1px solid #eee; border-radius: 4px; }
+pre.code, code { font-size: 0.85em; }

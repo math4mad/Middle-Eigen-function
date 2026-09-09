@@ -1,0 +1,29 @@
+project:
+  type: website
+  output-dir: _site
+
+website:
+  title: "Middle Eigen Function"
+  navbar:
+    left:
+      - href: index.qmd
+        text: Home
+      - file: notes/eigen-ablation.qmd
+        text: "Ablation Note"
+      - href: https://github.com/math4mad/Middle-Eigen-function
+        text: GitHub
+  repo-url: https://github.com/math4mad/Middle-Eigen-function
+  page-footer:
+    left: "消融实验 · 权重矩阵中间特征值与泛化能力"
+    right: "Built with Quarto"
+
+format:
+  html:
+    theme: cosmo
+    css: styles.css
+    toc: true
+    echo: true
+
+execute:
+  enabled: true
+  freeze: auto

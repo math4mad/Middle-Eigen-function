@@ -1,6 +1,15 @@
 
 # 消融实验，以验证“权重矩阵中间特征值赋予模型泛化能力”的假设
 
+![](https://www.simplypsychology.org/wp-content/uploads/synapse.png)
+
+>  if we  make a analogy   biology neuron network  with   machine learning neural network ,
+
+   we can premise  ann model's params matrix decompse to  bone part, blood part and tissue part with  biological neural network axon, dendrites and  synapse. 
+
+   we can thought  during traing model just  like increasing muscle strength  in dendrites  and increasing   synapse density  in biological network 
+   so  I think  ANN  get generaliztion ability is substantial , and happen in middle part and minor part of eigen matrix in  model  svd matrix  decompostion  components 
+   
 
 ## 项目目标
 验证预训练语言模型（LLM）中，权重矩阵的中间奇异值（即“松散谱”）对模型在小样本微调后泛化能力的贡献。
@@ -55,7 +64,7 @@ C组：随机丢弃版
 
 
 ## workflow  
-
+- detail instruction  reading .agents/ folder 
 1. create  local env 
 2. model matrix load and decompostion
 3. model re training on small size dataset 
@@ -63,5 +72,5 @@ C组：随机丢弃版
 5. publish result to gh pages  by quarto note
 
 ##  rules
-- detail instruction  reading .agents folder 
+
 - time total time should be in 5 hours . if can't not complete . then you can summarize  stage  result  firstly
