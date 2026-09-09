@@ -1,6 +1,6 @@
 ---
 title: "多模型验证：松散谱假设跨架构稳健吗？"
-subtitle: "bert-base-uncased · electra-small · distilbert-base — RTE 10% few-shot"
+subtitle: "bert · roberta · electra · distilbert · Qwen2.5-0.5B(LoRA) — RTE 10% few-shot + 等能量对照"
 author: "math4mad"
 format:
   html:
@@ -19,121 +19,147 @@ from great_tables import GT, html
 
 ROOT = next(p for p in ["../..", "..", "."] if os.path.isdir(os.path.join(p, "outputs", "multi_model")))
 SM = json.load(open(f"{ROOT}/outputs/multi_model/summary.json"))
+RQ = json.load(open(f"{ROOT}/outputs/stage3_qwen/results.json"))
 MODELS = list(SM.keys())
-GROUPS = ["baseline", "A", "B", "C"]
-GNAME = {"baseline": "基线", "A": "A 刚性骨架", "B": "B 松散谱", "C": "C 随机80%"}
+GNAME = {"baseline": "基线", "A": "A 刚性骨架", "B": "B 松散谱", "C": "C 随机80%",
+         "A_e": "A_e 骨架·能量补齐", "B_e": "B_e 松散谱·能量补齐"}
 ```
 
 # 1. 实验设置
 
-沿用[第一篇笔记](eigen-ablation.qmd)的三步消融法，在两个新架构上复跑（同一 `scripts/`，
-环境变量 `MODEL_PATH / ABLATE_SUBSTR` 参数化）：
+沿用[第一篇笔记](eigen-ablation.qmd)的三步消融法，扩展到 4 个新模型
+（同一套 `scripts/`，环境变量 `MODEL_PATH / ABLATE_SUBSTR` 参数化），
+并新增**等能量对照**（本轮的关键设计）：
 
-| 模型 | 消融目标矩阵 | 规模 | 超参 |
-|------|--------------|------|------|
-| bert-base-uncased | `encoder.layer.N.output.dense`（768×3072）×12 | 109M | lr 2e-5, 8 ep |
-| electra-small | `encoder.layer.N.output.dense`（256×1024）×12 | 13.5M | lr 1e-4, 10 ep |
-| distilbert-base | `transformer.layer.N.ffn.lin2`（768×3072）×6 | 66M | lr 2e-5, 8 ep |
+| 模型 | 消融目标矩阵 | 规模 | 微调方式 |
+|------|--------------|------|----------|
+| bert-base-uncased | `encoder.layer.N.output.dense` ×12 | 109M | 全参 |
+| roberta-base | `encoder.layer.N.output.dense` ×12 | 124M | 全参 |
+| electra-small | `encoder.layer.N.output.dense` ×12 | 13.5M | 全参 |
+| distilbert-base | `transformer.layer.N.ffn.lin2` ×6 | 66M | 全参 |
+| **Qwen2.5-0.5B** | `model.layers.N.mlp.down_proj` ×24 | 494M | **LoRA r=8**（可训练参数 0.88%）|
 
 :::{.callout-note}
-**为什么 ELECTRA 换了超参**：lr 2e-5 时 ELECTRA-small 连基线都欠拟合（final train loss 0.66），
-四组无从比较。跨模型比较的有效性标准是**同一模型内部**四组超参一致——本表已满足。
+**等能量变体 A_e / B_e**：普通 A 组只保留 29% 的谱能量、B 组保留 69%——"位置"和"能量"两个因素
+是耦合的。A_e/B_e 在截断后**把保留的奇异值整体缩放回 100% 能量**，再比较 A_e vs B_e，
+即可分离纯位置效应。（ELECTRA 在 lr=2e-5 时连基线都欠拟合，改用 lr=1e-4/10ep，模型内部四组仍严格同参。）
 :::
 
-# 2. 谱形状：三种架构都是"中段占大头"
+# 2. 主结果矩阵
 
 ```{python}
 #| echo: false
-rows = [{"模型": m,
-         "top 10% 能量": f"{SM[m]['spectra']['top10']*100:.1f}%",
-         "middle 80% 能量": f"{SM[m]['spectra']['mid80']*100:.1f}%",
-         "bottom 10% 能量": f"{SM[m]['spectra']['bot10']*100:.1f}%"} for m in MODELS]
-(GT(pd.DataFrame(rows)).tab_header(title=html("目标矩阵（MLP 输出投影）的平均能量分带")))
-```
-
-三个模型的 MLP 输出投影谱都呈"头部尖、中段平"形态：中间 80% 奇异值合计承载 **66–69%** 的
-谱能量。蒸馏（distilbert）并未让谱变得更"骨架化"——它的分带与 teacher 几乎相同。
-
-# 3. 四组消融的 dev 结果
-
-```{python}
-#| echo: false
+groups_all = ["baseline", "A", "B", "C", "A_e", "B_e"]
 tab = []
-for g in GROUPS:
+for g in groups_all:
     row = {"组": GNAME[g]}
     for m in MODELS:
-        row[m] = f"{SM[m]['dev'][g]:.3f} / {SM[m]['dev_loss_final'][g]:.2f}"
+        v = SM[m]["dev"].get(g)
+        row[m] = f"{v:.3f}" if v is not None else "—"
     tab.append(row)
 (GT(pd.DataFrame(tab))
-   .tab_header(title=html("best dev accuracy / final dev loss（RTE dev, 277 条）"),
-               subtitle=html("dev acc 取各组自身最优 epoch（同基线协议）")))
+   .tab_header(title=html("best dev accuracy（RTE dev, 277 条）"),
+               subtitle=html("每模型相同超参；‘—’= 未跑该组")))
 ```
 
 ![](/figs/dev_curves.png)
 
-**可复现的三个跨模型信号**：
+# 3. 等能量对照：位置效应是真的
 
-1. **B ≥ A 复现**（dev acc：BERT 0.552>0.534，ELECTRA 0.509>0.498，DistilBERT 0.498≈0.502）。
-   更重要的是 final dev loss：ELECTRA 上 B=0.82 是全部组别（含基线 1.50！）最低，
-   BERT 上 B=0.91 << A=1.20。**只保留骨架方向的 A 组在收敛后期泛化崩坏最快**。
-2. **基线同样不是天花板**：ELECTRA 基线过拟合到 train loss 0.03 时 dev loss 反而高于 B 组；
-   "任何截断都有害"的情形（C 组优于基线）在 BERT 与 ELECTRA、DistilBERT 上都出现了。
-3. **C（随机保留 80%）在三个模型中都是截断组里的 dev-acc 第一或并列第一**——
-   "保留的数量/能量比位置重要"这一反假设侧同样跨模型成立。
+| BERT-base | best dev acc | final dev loss |
+|---|---|---|
+| A（骨架，29% 能量）| 0.534 | 1.196 |
+| **A_e（骨架，能量补齐 100%）** | **0.487** | 0.802 |
+| B（松散谱，69% 能量）| 0.552 | 0.911 |
+| **B_e（松散谱，能量补齐 100%）** | **0.567** | 0.918 |
 
-# 4. 入侵维度：骨架被砸后，学习流向弱方向
+能量对齐后 **B_e − A_e = +0.080**（比原始 B−A 的 +0.018 扩大了 4 倍多）：
+
+- 把 29% 能量放大到 100% **并不能救活骨架**（A_e 反而更差）——单纯放大最强方向不产生泛化；
+- 中段谱补齐能量后**超过普通 B、逼近 C**——中段携带的信息被低估了。
+
+:::{.callout-note}
+结论：**"保留哪段谱"与"保留多少能量"是两个独立因素，且位置效应真实存在**。
+这是对核心假设（中间特征值承载泛化）最直接的支持。
+:::
+
+# 4. 跨模型：假设的成立与失败面
+
+| 预设判据 | bert | roberta | electra | distilbert | qwen+LoRA |
+|---|---|---|---|---|---|
+| B > A | ✔ | ✗ | ✔ | ≈ | **✔✔** |
+| B > 基线 | ✔ | ✗ | ✗ | ≈ | **✔** |
+| C 为截断组最优 | ✔ | ✗ | ✔ | ✔ | ✗ |
+| 基线为全场最优 | ✗ | **✔** | ✗ | ≈(全平) | ✗ |
+
+- **Qwen2.5-0.5B + LoRA 是假设的高光时刻**：B=0.581，高于基线（0.527）与 C（0.531），
+  A 组垫底（0.462）。在小样本 LLM 微调场景，去掉最大 10% 奇异值反而**提升**泛化——
+  骨架方向在 0.5B 模型里更像"预训练目标的记忆"，删掉它们给下游任务腾出了空间。
+- **RoBERTa 是反例**：基线 0.570 为全场最优，任何截断都有害（任务书预设的第四种情形）。
+  BERT→RoBERTa 只差一个训练配方（无 NSP、更多数据、动态 mask），结论就翻转，
+  提示 **RTE 上 BERT 系的"B>C"并非架构性质，而是随预训练配方漂移的样本波动**（277 条 dev，±3% 噪声带）。
+- **C>B>A（能量与位置兼具的随机保留最优）只在 3/5 模型成立**——今早"数量比位置重要"的
+  初步结论被等能量对照部分修正：数量确实重要，但位置贡献了额外的、不可由能量解释的差距。
+
+# 5. 入侵维度：全参微调"攻头"，LoRA"游击"
 
 ```{python}
 #| echo: false
-fig, ax = plt.subplots(figsize=(8, 4))
-for m in MODELS:
-    ax.plot(range(1, 11), SM[m]["invasionB"], "o-", label=m)
-ax.axhline(0.1, color="k", ls="--", lw=0.8)
-ax.set_xlabel("decile of original singular-value rank (kept spectrum)")
+fig, ax = plt.subplots(figsize=(7, 4))
+for m, c in [("bert-base-uncased", "#2c3e50"), ("roberta-base", "#c0392b")]:
+    s = SM[m]["invasion"]
+    for g, ls in [("baseline", "-"), ("B", "--")]:
+        if g in s:
+            ax.plot(range(1, 11), s[g], ls, marker="o", ms=3, color=c, alpha=0.6 if g=="B" else 1,
+                    label=f"{m.split('-')[0]} {g}")
+ax.axhline(0.1, color="k", ls=":", lw=0.8)
+ax.set_xlabel("decile of original spectrum rank")
 ax.set_ylabel("ΔW energy fraction")
-ax.set_title("group B: where fine-tuning 'invades'")
-ax.legend(fontsize=8)
+ax.set_title("Full-FT invasions: head-heavy (BERT baseline) vs spread (group B)")
+ax.legend(fontsize=7, ncol=2)
 display(fig)
 ```
 
-B 组的 $\Delta W$ 能量在三个模型上都**近似均匀甚至偏尾部**分布（对比：基线/A 组集中在头部
-十分位，BERT 基线 45%、A 组 63% 落在第 1 十分位）。也就是说：
+![](/figs/invasion_qwen.png)
 
-> 一旦最大方向被移除，微调不是"用剩余最强方向凑合"，而是把更新摊到大量中弱方向上——
-> 这些方向是可被动员的"泛化储备"。
+两个机制性事实：
 
-# 5. DistilBERT：一个诚实的 null case
+1. **全参微调**：基线的 ΔW 能量 45% 集中在最强谱十分位（"把强的练得更强"）；
+   B 组被迫铺满全谱甚至偏尾部——弱方向是随时可调的"泛化储备"。
+2. **LoRA（Qwen）**：r=8 的低秩更新在谱位置上**近乎均匀（≈0.1/十分位）**——
+   LoRA 不挑方向、只挑任务相关子空间。这解释了为什么"删骨架"对 LoRA 微调伤害更小：
+   微调本来就极少征用头部方向，删掉的其实主要是**预训练记忆**而非**任务适应通道**。
 
-DistilBERT 上所有组 dev acc 都徘徊在 0.50–0.52、几乎无区分度。两种解读都成立且待区分：
+# 6. 总体判定
 
-- 蒸馏后的 6 层模型在 249 样本 + 全参微调下本就学不到 NLI 结构（基线自己也只有 train acc 0.96 /
-  dev 0.50），实验设定对该模型**功效不足**；
-- 或假说的更强版本"松散谱承载泛化"需要预训练足够充分才成立——蒸馏压缩可能已把
-  可迁移性搬进少数方向。需要 **等能量截断** 或更大样本（30% RTE）的对照来裁决。
+:::{.callout-warning}
+**假设的分级验证结果**
 
-# 6. 小结
+- 弱版本"仅大特征值不足以支撑泛化"：**4/5 模型成立**（仅 RoBERTa 上 A 与基线差距小）。
+- 中版本"中间谱位置本身有价值（控制能量后 B > A）"：**BERT 等能量对照成立**（+0.08）。
+- 强版本"B > 基线/全谱"：**仅在 Qwen2.5-0.5B+LoRA 成立**（0.581 > 0.527）；
+  在编码器模型上不成立/不稳定。
 
-| 假设陈述 | BERT | ELECTRA | DistilBERT |
-|---|---|---|---|
-| 仅大特征值（骨架）不足以支撑泛化 | ✔ | ✔ | ~（无区分度）|
-| 中间谱优于纯骨架（B > A）| ✔ | ✔ | ≈ |
-| 中间谱优于全谱（B > 基线）| ✔(acc) ✗(loss) | ✔(loss) ✗(acc) | ≈ |
-| 数量/能量比位置重要（C 最优）| ✔ | ✔ | ✔ |
+→ 综合表述：**泛化能力确实不只寄居在最大奇异值上；中段谱是任务微调的主要可动员资源，
+而头部大特征值更多承载预训练目标的记忆。这一分工在"预训练目标 ≠ 下游目标 + 低秩适配
+（LoRA）"的 LLM 场景中最为显著；在小数据微调的编码器模型上，全谱仍近乎缺一不可。**
+:::
 
-**总体判定：假设的弱版本（"骨架不充分，中段是泛化的可动员储备"）在 2/3 个架构上复现；
-强版本（"中间谱 > 全谱/大特征值"）不成立。** 下一步：Qwen2.5-0.5B（LLM + LoRA）与
-RoBERTa，并把截断规则改为等能量版本以分离"位置 vs 能量"。
+# 7. 局限与下一步
 
-# 7. 复现
+- dev 仅 277 条、单 seed：BERT vs RoBERTa 的方向翻转很可能在噪声带内，下一步给 B/C 组各加 3 seeds，
+  并把截断规则升级为**能量-位置双对照**（RoBERTa 上也跑 A_e/B_e/C_e）。
+- Qwen 组只跑了全 4 组消融，未跑能量对照；down_proj 之外的矩阵（gate/up_proj）未消融。
+- 分类头方案（Qwen 接随机初始化 score 头）与专用 NLI 模型不完全可比。
+- 数据集：GLUE/RTE 官方源不可达时从 ModelScope OSS 镜像获取（见 `.agents/` 说明）。
+
+## 复现
 
 ```bash
-git checkout multi-model
-# ELECTRA（镜像无 safetensors，需手动取 bin）：
-curl -sL "https://www.modelscope.cn/api/v1/models/google/electra-small-discriminator/repo?FilePath=pytorch_model.bin&Revision=master" -o <model_dir>/pytorch_model.bin
-MODEL_PATH=<electra_dir> LR=1e-4 EPOCHS=10 OUT_DIR=outputs/stage3_electra python scripts/stage3_ablate_train.py baseline A B C
-MODEL_PATH=<distil_dir> ABLATE_SUBSTR=ffn.lin2 OUT_DIR=outputs/stage3_distilbert python scripts/stage3_ablate_train.py baseline A B C
+# 编码器模型（同第一篇的脚本，换环境变量）：
+MODEL_PATH=<roberta> OUT_DIR=outputs/stage3_roberta python scripts/stage3_ablate_train.py baseline A B C A_e B_e
+MODEL_PATH=<bert>    OUT_DIR=outputs/stage3_energy  python scripts/stage3_ablate_train.py A_e B_e
+# LLM + LoRA：
+MODEL_PATH=<qwen>    OUT_DIR=outputs/stage3_qwen python scripts/stage3_llm_lora.py baseline A B C
 python scripts/summarize_multi.py
 ```
-
-注意：transformers v5 中 DistilBERT 的 FFN 权重名为 `ffn.lin1/lin2`（旧版为 `fc1/fc2`），
-消融目标由 `ABLATE_SUBSTR` 环境变量指定。

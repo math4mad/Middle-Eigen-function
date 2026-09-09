@@ -1,0 +1,178 @@
+device: mps
+RTE sizes: train=2489 dev=277
+RTE small-data train: 249 samples (10%)
+
+===== group baseline =====
+Loading weights:   0%|          | 0/197 [00:00<?, ?it/s]Loading weights: 100%|██████████| 197/197 [00:00<00:00, 14826.71it/s]
+[transformers] [1mRobertaForSequenceClassification LOAD REPORT[0m from: /Users/mac/Programming/code-2026/Middle-Eigen-function/models/models/AI-ModelScope--roberta-base/snapshots/master
+Key                        | Status     | 
+---------------------------+------------+-
+lm_head.dense.bias         | UNEXPECTED | 
+lm_head.layer_norm.bias    | UNEXPECTED | 
+lm_head.dense.weight       | UNEXPECTED | 
+lm_head.bias               | UNEXPECTED | 
+lm_head.layer_norm.weight  | UNEXPECTED | 
+classifier.out_proj.weight | MISSING    | 
+classifier.dense.bias      | MISSING    | 
+classifier.out_proj.bias   | MISSING    | 
+classifier.dense.weight    | MISSING    | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
+[baseline] ep1 train_loss=0.690 train_acc=0.518 dev_loss=0.697 dev_acc=0.473
+[baseline] ep2 train_loss=0.691 train_acc=0.518 dev_loss=0.703 dev_acc=0.473
+[baseline] ep3 train_loss=0.685 train_acc=0.518 dev_loss=0.698 dev_acc=0.473
+[baseline] ep4 train_loss=0.678 train_acc=0.651 dev_loss=0.691 dev_acc=0.520
+[baseline] ep5 train_loss=0.651 train_acc=0.791 dev_loss=0.689 dev_acc=0.542
+[baseline] ep6 train_loss=0.566 train_acc=0.819 dev_loss=0.683 dev_acc=0.560
+[baseline] ep7 train_loss=0.447 train_acc=0.871 dev_loss=0.699 dev_acc=0.549
+[baseline] ep8 train_loss=0.403 train_acc=0.884 dev_loss=0.714 dev_acc=0.570
+
+===== group A =====
+Loading weights:   0%|          | 0/197 [00:00<?, ?it/s]Loading weights: 100%|██████████| 197/197 [00:00<00:00, 8513.06it/s]
+[transformers] [1mRobertaForSequenceClassification LOAD REPORT[0m from: /Users/mac/Programming/code-2026/Middle-Eigen-function/models/models/AI-ModelScope--roberta-base/snapshots/master
+Key                        | Status     | 
+---------------------------+------------+-
+lm_head.dense.bias         | UNEXPECTED | 
+lm_head.layer_norm.bias    | UNEXPECTED | 
+lm_head.dense.weight       | UNEXPECTED | 
+lm_head.bias               | UNEXPECTED | 
+lm_head.layer_norm.weight  | UNEXPECTED | 
+classifier.out_proj.weight | MISSING    | 
+classifier.dense.bias      | MISSING    | 
+classifier.out_proj.bias   | MISSING    | 
+classifier.dense.weight    | MISSING    | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
+[A] ep1 train_loss=0.696 train_acc=0.518 dev_loss=0.709 dev_acc=0.473
+[A] ep2 train_loss=0.694 train_acc=0.518 dev_loss=0.706 dev_acc=0.473
+[A] ep3 train_loss=0.690 train_acc=0.518 dev_loss=0.697 dev_acc=0.473
+[A] ep4 train_loss=0.676 train_acc=0.594 dev_loss=0.697 dev_acc=0.495
+[A] ep5 train_loss=0.569 train_acc=0.783 dev_loss=0.731 dev_acc=0.509
+[A] ep6 train_loss=0.373 train_acc=0.871 dev_loss=0.866 dev_acc=0.531
+[A] ep7 train_loss=0.288 train_acc=0.912 dev_loss=0.965 dev_acc=0.538
+[A] ep8 train_loss=0.235 train_acc=0.932 dev_loss=0.965 dev_acc=0.531
+
+===== group B =====
+Loading weights:   0%|          | 0/197 [00:00<?, ?it/s]Loading weights: 100%|██████████| 197/197 [00:00<00:00, 7901.75it/s]
+[transformers] [1mRobertaForSequenceClassification LOAD REPORT[0m from: /Users/mac/Programming/code-2026/Middle-Eigen-function/models/models/AI-ModelScope--roberta-base/snapshots/master
+Key                        | Status     | 
+---------------------------+------------+-
+lm_head.dense.bias         | UNEXPECTED | 
+lm_head.layer_norm.bias    | UNEXPECTED | 
+lm_head.dense.weight       | UNEXPECTED | 
+lm_head.bias               | UNEXPECTED | 
+lm_head.layer_norm.weight  | UNEXPECTED | 
+classifier.out_proj.weight | MISSING    | 
+classifier.dense.bias      | MISSING    | 
+classifier.out_proj.bias   | MISSING    | 
+classifier.dense.weight    | MISSING    | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
+[B] ep1 train_loss=0.707 train_acc=0.518 dev_loss=0.726 dev_acc=0.473
+[B] ep2 train_loss=0.702 train_acc=0.482 dev_loss=0.693 dev_acc=0.527
+[B] ep3 train_loss=0.712 train_acc=0.482 dev_loss=0.698 dev_acc=0.527
+[B] ep4 train_loss=0.699 train_acc=0.518 dev_loss=0.713 dev_acc=0.473
+[B] ep5 train_loss=0.702 train_acc=0.482 dev_loss=0.693 dev_acc=0.527
+[B] ep6 train_loss=0.692 train_acc=0.518 dev_loss=0.695 dev_acc=0.473
+[B] ep7 train_loss=0.692 train_acc=0.518 dev_loss=0.696 dev_acc=0.473
+[B] ep8 train_loss=0.699 train_acc=0.482 dev_loss=0.692 dev_acc=0.527
+
+===== group C =====
+Loading weights:   0%|          | 0/197 [00:00<?, ?it/s]Loading weights: 100%|██████████| 197/197 [00:00<00:00, 18516.86it/s]
+[transformers] [1mRobertaForSequenceClassification LOAD REPORT[0m from: /Users/mac/Programming/code-2026/Middle-Eigen-function/models/models/AI-ModelScope--roberta-base/snapshots/master
+Key                        | Status     | 
+---------------------------+------------+-
+lm_head.dense.bias         | UNEXPECTED | 
+lm_head.layer_norm.bias    | UNEXPECTED | 
+lm_head.dense.weight       | UNEXPECTED | 
+lm_head.bias               | UNEXPECTED | 
+lm_head.layer_norm.weight  | UNEXPECTED | 
+classifier.out_proj.weight | MISSING    | 
+classifier.dense.bias      | MISSING    | 
+classifier.out_proj.bias   | MISSING    | 
+classifier.dense.weight    | MISSING    | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
+[C] ep1 train_loss=0.708 train_acc=0.518 dev_loss=0.726 dev_acc=0.473
+[C] ep2 train_loss=0.692 train_acc=0.518 dev_loss=0.696 dev_acc=0.473
+[C] ep3 train_loss=0.693 train_acc=0.518 dev_loss=0.700 dev_acc=0.473
+[C] ep4 train_loss=0.692 train_acc=0.618 dev_loss=0.693 dev_acc=0.477
+[C] ep5 train_loss=0.692 train_acc=0.546 dev_loss=0.693 dev_acc=0.462
+[C] ep6 train_loss=0.691 train_acc=0.518 dev_loss=0.694 dev_acc=0.473
+[C] ep7 train_loss=0.690 train_acc=0.518 dev_loss=0.695 dev_acc=0.473
+[C] ep8 train_loss=0.689 train_acc=0.606 dev_loss=0.694 dev_acc=0.469
+
+===== group A_e =====
+Loading weights:   0%|          | 0/197 [00:00<?, ?it/s]Loading weights: 100%|██████████| 197/197 [00:00<00:00, 8718.40it/s]
+[transformers] [1mRobertaForSequenceClassification LOAD REPORT[0m from: /Users/mac/Programming/code-2026/Middle-Eigen-function/models/models/AI-ModelScope--roberta-base/snapshots/master
+Key                        | Status     | 
+---------------------------+------------+-
+lm_head.dense.bias         | UNEXPECTED | 
+lm_head.layer_norm.bias    | UNEXPECTED | 
+lm_head.dense.weight       | UNEXPECTED | 
+lm_head.bias               | UNEXPECTED | 
+lm_head.layer_norm.weight  | UNEXPECTED | 
+classifier.out_proj.weight | MISSING    | 
+classifier.dense.bias      | MISSING    | 
+classifier.out_proj.bias   | MISSING    | 
+classifier.dense.weight    | MISSING    | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
+[A_e] ep1 train_loss=0.693 train_acc=0.514 dev_loss=0.703 dev_acc=0.477
+[A_e] ep2 train_loss=0.699 train_acc=0.490 dev_loss=0.693 dev_acc=0.523
+[A_e] ep3 train_loss=0.694 train_acc=0.466 dev_loss=0.699 dev_acc=0.462
+[A_e] ep4 train_loss=0.693 train_acc=0.514 dev_loss=0.696 dev_acc=0.473
+[A_e] ep5 train_loss=0.691 train_acc=0.518 dev_loss=0.701 dev_acc=0.473
+[A_e] ep6 train_loss=0.686 train_acc=0.558 dev_loss=0.690 dev_acc=0.534
+[A_e] ep7 train_loss=0.676 train_acc=0.651 dev_loss=0.689 dev_acc=0.542
+[A_e] ep8 train_loss=0.683 train_acc=0.562 dev_loss=0.690 dev_acc=0.516
+
+===== group B_e =====
+Loading weights:   0%|          | 0/197 [00:00<?, ?it/s]Loading weights: 100%|██████████| 197/197 [00:00<00:00, 16647.08it/s]
+[transformers] [1mRobertaForSequenceClassification LOAD REPORT[0m from: /Users/mac/Programming/code-2026/Middle-Eigen-function/models/models/AI-ModelScope--roberta-base/snapshots/master
+Key                        | Status     | 
+---------------------------+------------+-
+lm_head.dense.bias         | UNEXPECTED | 
+lm_head.layer_norm.bias    | UNEXPECTED | 
+lm_head.dense.weight       | UNEXPECTED | 
+lm_head.bias               | UNEXPECTED | 
+lm_head.layer_norm.weight  | UNEXPECTED | 
+classifier.out_proj.weight | MISSING    | 
+classifier.dense.bias      | MISSING    | 
+classifier.out_proj.bias   | MISSING    | 
+classifier.dense.weight    | MISSING    | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
+[B_e] ep1 train_loss=0.720 train_acc=0.518 dev_loss=0.747 dev_acc=0.473
+[B_e] ep2 train_loss=0.694 train_acc=0.470 dev_loss=0.692 dev_acc=0.527
+[B_e] ep3 train_loss=0.733 train_acc=0.482 dev_loss=0.711 dev_acc=0.527
+[B_e] ep4 train_loss=0.696 train_acc=0.518 dev_loss=0.709 dev_acc=0.473
+[B_e] ep5 train_loss=0.706 train_acc=0.482 dev_loss=0.695 dev_acc=0.527
+[B_e] ep6 train_loss=0.692 train_acc=0.510 dev_loss=0.694 dev_acc=0.498
+[B_e] ep7 train_loss=0.691 train_acc=0.518 dev_loss=0.695 dev_acc=0.473
+[B_e] ep8 train_loss=0.696 train_acc=0.482 dev_loss=0.692 dev_acc=0.527
+/Users/mac/Programming/code-2026/Middle-Eigen-function/scripts/stage3_ablate_train.py:228: UserWarning: linestyle is redundantly defined by the 'linestyle' keyword argument and the fmt string "o-" (-> linestyle='-'). The keyword argument will take precedence.
+  axes[0].plot([h["epoch"] for h in r["history"]], [h["dev_acc"] for h in r["history"]],
+/Users/mac/Programming/code-2026/Middle-Eigen-function/scripts/stage3_ablate_train.py:230: UserWarning: linestyle is redundantly defined by the 'linestyle' keyword argument and the fmt string "o-" (-> linestyle='-'). The keyword argument will take precedence.
+  axes[1].plot([h["epoch"] for h in r["history"]], [h["train_loss"] for h in r["history"]],
+
+final dev accuracy:
+  baseline  dev_acc=0.570 (best ep 8) train_acc=0.884
+  A         dev_acc=0.538 (best ep 7) train_acc=0.912
+  B         dev_acc=0.527 (best ep 2) train_acc=0.482
+  C         dev_acc=0.477 (best ep 4) train_acc=0.618
+  A_e       dev_acc=0.542 (best ep 7) train_acc=0.651
+  B_e       dev_acc=0.527 (best ep 2) train_acc=0.470
+saved: outputs/stage3_roberta

@@ -54,18 +54,25 @@ def set_all_seeds(seed=SEED):
 
 
 def keep_mask_group(n, group, rng):
-    """Boolean mask over the n singular values (sorted descending) to KEEP."""
+    """Boolean mask over the n singular values (sorted descending) to KEEP.
+
+    Groups ending in '_e' are ENERGY-PRESERVING variants: after masking we
+    rescale the kept singular values so sum(S^2) is unchanged. This isolates
+    the *position* of dropped singular values from the *amount of energy*
+    removed (plain A drops ~70% of energy, plain B drops ~30%).
+    """
+    base = group.split("_")[0]
     k_top = max(1, int(np.ceil(n * 0.10)))
     k_bot = max(1, int(np.ceil(n * 0.10)))
     mask = np.zeros(n, dtype=bool)
-    if group == "A":                       # rigid skeleton: top 10%
+    if base == "A":                       # rigid skeleton: top 10%
         mask[:k_top] = True
-    elif group == "B":                     # loose spectrum: middle 80%
+    elif base == "B":                     # loose spectrum: middle 80%
         mask[k_top:n - k_bot] = True
-    elif group == "C":                     # random 80%
+    elif base == "C":                     # random 80%
         idx = rng.permutation(n)[: int(n * 0.80)]
         mask[idx] = True
-    elif group == "baseline":
+    elif base == "baseline":
         mask[:] = True
     else:
         raise ValueError(group)
@@ -75,6 +82,7 @@ def keep_mask_group(n, group, rng):
 def ablate_model(model, group):
     """Zero selected singular values of each mlp.c_proj and rebuild in place."""
     rng = np.random.default_rng(SEED)
+    energy_preserving = group.endswith("_e")
     report = {}
     with torch.no_grad():
         for name, p in model.named_parameters():
@@ -84,10 +92,13 @@ def ablate_model(model, group):
             U, S, Vt = np.linalg.svd(W, full_matrices=False)
             mask = keep_mask_group(len(S), group, rng)
             S2 = S * mask
+            e_before = float((S ** 2).sum())
+            if energy_preserving and (S2 ** 2).sum() > 0:
+                S2 = S2 * np.sqrt(e_before / float((S2 ** 2).sum()))
             p.copy_(torch.from_numpy((U * S2) @ Vt).to(p.dtype))
             report[name] = {
                 "kept": int(mask.sum()), "total": int(mask.size),
-                "energy_kept": float((S2 ** 2).sum() / (S ** 2).sum()),
+                "energy_kept": float((S2 ** 2).sum() / e_before),
                 "fro_rel_change": float(np.linalg.norm(S - S2) / np.linalg.norm(S)),
             }
     return report
@@ -210,11 +221,14 @@ def main():
     # ---- summary plot ----
     fig, axes = plt.subplots(1, 2, figsize=(11, 4))
     colors = {"baseline": "#2c3e50", "A": "#c0392b", "B": "#27ae60", "C": "#8e44ad"}
+    extra = {"A_e": "#e74c3c", "B_e": "#2ecc71"}  # energy-preserving variants (dashed)
     for g, r in results.items():
+        c = colors.get(g.split("_")[0], extra.get(g, "#7f8c8d"))
+        ls = "--" if g.endswith("_e") else "-"
         axes[0].plot([h["epoch"] for h in r["history"]], [h["dev_acc"] for h in r["history"]],
-                     "o-", color=colors[g], label=g)
+                     "o-", color=c, ls=ls, label=g)
         axes[1].plot([h["epoch"] for h in r["history"]], [h["train_loss"] for h in r["history"]],
-                     "o-", color=colors[g], label=g)
+                     "o-", color=c, ls=ls, label=g)
     axes[0].set_title("dev accuracy"); axes[0].set_ylim(0.4, 1.0)
     axes[1].set_title("train loss")
     for a in axes:
@@ -222,9 +236,9 @@ def main():
     fig.tight_layout(); fig.savefig(f"{OUT_DIR}/curves.png", dpi=150)
 
     # invasion-dimension histogram for group B (the hypothesis group)
-    if "B" in results:
+    for bname in [g for g in results if g.split("_")[0] == "B"]:
         dec = np.zeros(10)
-        for inv in results["B"]["invasions"].values():
+        for inv in results[bname]["invasions"].values():
             dec += np.array(inv["energy_by_decile_of_original_spectrum"])
         dec /= dec.sum()
         fig, ax = plt.subplots(figsize=(6, 3.5))
@@ -232,8 +246,8 @@ def main():
         ax.set_xticks(range(1, 11), [f"{i/10:.1f}" for i in range(1, 11)])
         ax.set_xlabel("decile of original singular-value rank")
         ax.set_ylabel("delta-energy fraction")
-        ax.set_title("Where fine-tuning 'invades' (group B, mlp.c_proj)")
-        fig.tight_layout(); fig.savefig(f"{OUT_DIR}/invasion_B.png", dpi=150)
+        ax.set_title(f"Where fine-tuning 'invades' (group {bname}, mlp.c_proj)")
+        fig.tight_layout(); fig.savefig(f"{OUT_DIR}/invasion_{bname}.png", dpi=150)
 
     with open(f"{OUT_DIR}/results.json", "w") as f:
         json.dump(results, f, indent=2)
