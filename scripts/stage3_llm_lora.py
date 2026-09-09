@@ -29,12 +29,13 @@ MODEL_NAME = os.environ.get("MODEL_PATH") or os.path.abspath("models/Qwen/Qwen2.
 RTE_DIR = os.environ.get("RTE_DIR", "data/RTE")
 OUT_DIR = os.environ.get("OUT_DIR", "outputs/stage3_qwen")
 AB_SUBSTR = os.environ.get("ABLATE_SUBSTR", "mlp.down_proj")
-SEED = 42
+SEED = int(os.environ.get("SEED", "42"))            # training seed
+DATA_SEED = int(os.environ.get("DATA_SEED", "42"))  # subset-sampling seed (fix to keep data identical across seeds)
 BATCH = int(os.environ.get("BATCH", 16))
 EPOCHS = int(os.environ.get("EPOCHS", 5))
 LR = float(os.environ.get("LR", 2e-4))
 LORA_R = int(os.environ.get("LORA_R", 8))
-FRAC_TRAIN = 0.10
+FRAC_TRAIN = float(os.environ.get("FRAC_TRAIN", 0.10))
 
 
 def is_target(name):
@@ -67,12 +68,30 @@ def keep_mask_group(n, group, rng):
     return mask, (group.endswith("_e"))
 
 
-LAYER_SETS = {"E6": range(0, 6), "M12": range(6, 18), "L6": range(18, 24)}
+LAYER_SETS = {"E6": range(0, 6), "M12": range(6, 18), "L6": range(18, 24)}  # legacy, 24-layer qwen0.5b
+
+
+def dyn_layer_set(group, n_layers):
+    """TAILn / FRONTn / MIDn — layer-count-agnostic (for 1.5B's 28 layers etc.)."""
+    import re
+    m = re.fullmatch(r"(TAIL|FRONT|MID)(\d+)", group)
+    if not m:
+        return None
+    kind, n = m.group(1), min(int(m.group(2)), n_layers)
+    if kind == "TAIL":
+        return range(n_layers - n, n_layers)
+    if kind == "FRONT":
+        return range(0, n)
+    start = (n_layers - n) // 2
+    return range(start, start + n)
 
 
 def ablate_model(model, group):
     rng = np.random.default_rng(SEED)
-    lset = LAYER_SETS.get(group)
+    tgt = [(name, mod) for name, mod in model.named_modules()
+           if name.endswith(AB_SUBSTR) and isinstance(mod, nn.Linear)]
+    n_layers = len({name.split("layers.")[1].split(".")[0] for name, _ in tgt})
+    lset = LAYER_SETS.get(group) or dyn_layer_set(group, n_layers)
     report = {}
     with torch.no_grad():
         for name, mod in model.named_modules():
@@ -154,7 +173,7 @@ def load_rte(tokenizer):
         df = pd.read_csv(f"{RTE_DIR}/{fn}", sep="\t")
         df["label"] = df["label"].map(lab)
         return df.dropna(subset=["label"])
-    tr = read("train.tsv").sample(frac=FRAC_TRAIN, random_state=SEED).reset_index(drop=True)
+    tr = read("train.tsv").sample(frac=FRAC_TRAIN, random_state=DATA_SEED).reset_index(drop=True)
     dv = read("dev.tsv")
     tokenizer.padding_side = "right"
     def feats(df):
