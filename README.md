@@ -5,6 +5,8 @@
 - 任务书：[`AGETNTS.md`](AGETNTS.md)
 - 实验代码：`scripts/stage2_svd.py`（谱分析）、`scripts/stage3_ablate_train.py`（A/B/C 消融 + RTE 小样本微调）
 - 结果数据与图：`outputs/`
+- 日志记录: `log/`
+- 阶段任务:`stage/`
 - Quarto 报告：`report/`（GitHub Actions 自动发布到 gh-pages）
 
 ## 快速复现
