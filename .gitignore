@@ -9,3 +9,4 @@ report/.quarto/
 __pycache__/
 *.ipynb_checkpoints
 Jargon.md
+log/
