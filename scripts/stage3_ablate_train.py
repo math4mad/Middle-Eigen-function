@@ -32,12 +32,15 @@ from transformers import AutoModelForSequenceClassification, AutoTokenizer, get_
 MODEL_NAME = os.environ.get("MODEL_PATH") or os.path.abspath("models/AI-ModelScope/bert-base-uncased")
 RTE_DIR = os.environ.get("RTE_DIR", "data/RTE")
 ABLATED_KEY = "output.dense.weight"   # BERT's mlp.c_proj == layer.output.dense (NOT attention.output.dense)
+# ablation target: substring match minus excluded substrings (comma-separated), env-overridable per model
+AB_SUBSTR = os.environ.get("ABLATE_SUBSTR", "output.dense")
+AB_EXCLUDE = tuple(x for x in os.environ.get("ABLATE_EXCLUDE", "attention,embeddings").split(",") if x)
 
 
 def is_mlp_cproj(name: str) -> bool:
-    return name.endswith(ABLATED_KEY) and ".attention." not in name
+    return AB_SUBSTR in name and not any(x in name for x in AB_EXCLUDE) and name.endswith(".weight")
 
-OUT_DIR = "outputs/stage3"
+OUT_DIR = os.environ.get("OUT_DIR", "outputs/stage3")
 SEED = 42
 BATCH = int(os.environ.get("BATCH", 16))
 EPOCHS = int(os.environ.get("EPOCHS", 8))

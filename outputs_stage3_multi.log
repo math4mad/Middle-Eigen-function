@@ -1,0 +1,140 @@
+device: mps
+RTE sizes: train=2489 dev=277
+RTE small-data train: 249 samples (10%)
+
+===== group baseline =====
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights: 100%|██████████| 199/199 [00:00<00:00, 42970.89it/s]
+[transformers] [1mElectraForSequenceClassification LOAD REPORT[0m from: /Users/mac/Programming/code-2026/Middle-Eigen-function/models/models/google--electra-small-discriminator/snapshots/master
+Key                                               | Status     | 
+--------------------------------------------------+------------+-
+discriminator_predictions.dense_prediction.weight | UNEXPECTED | 
+discriminator_predictions.dense.bias              | UNEXPECTED | 
+discriminator_predictions.dense_prediction.bias   | UNEXPECTED | 
+discriminator_predictions.dense.weight            | UNEXPECTED | 
+classifier.dense.weight                           | MISSING    | 
+classifier.dense.bias                             | MISSING    | 
+classifier.out_proj.weight                        | MISSING    | 
+classifier.out_proj.bias                          | MISSING    | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
+[baseline] ep1 train_loss=0.690 train_acc=0.522 dev_loss=0.695 dev_acc=0.473
+[baseline] ep2 train_loss=0.687 train_acc=0.522 dev_loss=0.695 dev_acc=0.477
+[baseline] ep3 train_loss=0.683 train_acc=0.538 dev_loss=0.695 dev_acc=0.480
+[baseline] ep4 train_loss=0.679 train_acc=0.606 dev_loss=0.694 dev_acc=0.491
+[baseline] ep5 train_loss=0.674 train_acc=0.627 dev_loss=0.694 dev_acc=0.487
+[baseline] ep6 train_loss=0.669 train_acc=0.703 dev_loss=0.693 dev_acc=0.505
+[baseline] ep7 train_loss=0.665 train_acc=0.735 dev_loss=0.693 dev_acc=0.520
+[baseline] ep8 train_loss=0.664 train_acc=0.731 dev_loss=0.693 dev_acc=0.520
+
+===== group A =====
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights: 100%|██████████| 199/199 [00:00<00:00, 40016.61it/s]
+[transformers] [1mElectraForSequenceClassification LOAD REPORT[0m from: /Users/mac/Programming/code-2026/Middle-Eigen-function/models/models/google--electra-small-discriminator/snapshots/master
+Key                                               | Status     | 
+--------------------------------------------------+------------+-
+discriminator_predictions.dense_prediction.weight | UNEXPECTED | 
+discriminator_predictions.dense.bias              | UNEXPECTED | 
+discriminator_predictions.dense_prediction.bias   | UNEXPECTED | 
+discriminator_predictions.dense.weight            | UNEXPECTED | 
+classifier.dense.weight                           | MISSING    | 
+classifier.dense.bias                             | MISSING    | 
+classifier.out_proj.weight                        | MISSING    | 
+classifier.out_proj.bias                          | MISSING    | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
+[A] ep1 train_loss=0.691 train_acc=0.518 dev_loss=0.695 dev_acc=0.473
+[A] ep2 train_loss=0.690 train_acc=0.518 dev_loss=0.695 dev_acc=0.473
+[A] ep3 train_loss=0.689 train_acc=0.518 dev_loss=0.695 dev_acc=0.473
+[A] ep4 train_loss=0.687 train_acc=0.526 dev_loss=0.695 dev_acc=0.473
+[A] ep5 train_loss=0.682 train_acc=0.554 dev_loss=0.695 dev_acc=0.480
+[A] ep6 train_loss=0.680 train_acc=0.731 dev_loss=0.692 dev_acc=0.498
+[A] ep7 train_loss=0.678 train_acc=0.739 dev_loss=0.692 dev_acc=0.516
+[A] ep8 train_loss=0.676 train_acc=0.723 dev_loss=0.693 dev_acc=0.502
+
+===== group B =====
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights: 100%|██████████| 199/199 [00:00<00:00, 42422.69it/s]
+[transformers] [1mElectraForSequenceClassification LOAD REPORT[0m from: /Users/mac/Programming/code-2026/Middle-Eigen-function/models/models/google--electra-small-discriminator/snapshots/master
+Key                                               | Status     | 
+--------------------------------------------------+------------+-
+discriminator_predictions.dense_prediction.weight | UNEXPECTED | 
+discriminator_predictions.dense.bias              | UNEXPECTED | 
+discriminator_predictions.dense_prediction.bias   | UNEXPECTED | 
+discriminator_predictions.dense.weight            | UNEXPECTED | 
+classifier.dense.weight                           | MISSING    | 
+classifier.dense.bias                             | MISSING    | 
+classifier.out_proj.weight                        | MISSING    | 
+classifier.out_proj.bias                          | MISSING    | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
+[B] ep1 train_loss=0.692 train_acc=0.518 dev_loss=0.697 dev_acc=0.473
+[B] ep2 train_loss=0.691 train_acc=0.518 dev_loss=0.697 dev_acc=0.473
+[B] ep3 train_loss=0.690 train_acc=0.518 dev_loss=0.697 dev_acc=0.473
+[B] ep4 train_loss=0.689 train_acc=0.518 dev_loss=0.697 dev_acc=0.473
+[B] ep5 train_loss=0.689 train_acc=0.518 dev_loss=0.698 dev_acc=0.473
+[B] ep6 train_loss=0.687 train_acc=0.522 dev_loss=0.697 dev_acc=0.473
+[B] ep7 train_loss=0.685 train_acc=0.550 dev_loss=0.697 dev_acc=0.484
+[B] ep8 train_loss=0.684 train_acc=0.550 dev_loss=0.697 dev_acc=0.484
+
+===== group C =====
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights: 100%|██████████| 199/199 [00:00<00:00, 39538.92it/s]
+[transformers] [1mElectraForSequenceClassification LOAD REPORT[0m from: /Users/mac/Programming/code-2026/Middle-Eigen-function/models/models/google--electra-small-discriminator/snapshots/master
+Key                                               | Status     | 
+--------------------------------------------------+------------+-
+discriminator_predictions.dense_prediction.weight | UNEXPECTED | 
+discriminator_predictions.dense.bias              | UNEXPECTED | 
+discriminator_predictions.dense_prediction.bias   | UNEXPECTED | 
+discriminator_predictions.dense.weight            | UNEXPECTED | 
+classifier.dense.weight                           | MISSING    | 
+classifier.dense.bias                             | MISSING    | 
+classifier.out_proj.weight                        | MISSING    | 
+classifier.out_proj.bias                          | MISSING    | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
+[C] ep1 train_loss=0.690 train_acc=0.518 dev_loss=0.696 dev_acc=0.473
+[C] ep2 train_loss=0.688 train_acc=0.534 dev_loss=0.697 dev_acc=0.477
+[C] ep3 train_loss=0.685 train_acc=0.558 dev_loss=0.697 dev_acc=0.480
+[C] ep4 train_loss=0.679 train_acc=0.614 dev_loss=0.697 dev_acc=0.473
+[C] ep5 train_loss=0.675 train_acc=0.618 dev_loss=0.698 dev_acc=0.484
+[C] ep6 train_loss=0.670 train_acc=0.647 dev_loss=0.698 dev_acc=0.480
+[C] ep7 train_loss=0.664 train_acc=0.711 dev_loss=0.698 dev_acc=0.487
+[C] ep8 train_loss=0.663 train_acc=0.703 dev_loss=0.699 dev_acc=0.473
+
+final dev accuracy:
+  baseline  dev_acc=0.520 (best ep 7) train_acc=0.735
+  A         dev_acc=0.516 (best ep 7) train_acc=0.739
+  B         dev_acc=0.484 (best ep 7) train_acc=0.550
+  C         dev_acc=0.487 (best ep 7) train_acc=0.711
+saved: outputs/stage3_electra
+device: mps
+RTE sizes: train=2489 dev=277
+RTE small-data train: 249 samples (10%)
+
+===== group baseline =====
+Loading weights:   0%|          | 0/100 [00:00<?, ?it/s]Loading weights: 100%|██████████| 100/100 [00:00<00:00, 14043.27it/s]
+[transformers] [1mDistilBertForSequenceClassification LOAD REPORT[0m from: /Users/mac/Programming/code-2026/Middle-Eigen-function/models/models/AI-ModelScope--distilbert-base-uncased/snapshots/master
+Key                     | Status     | 
+------------------------+------------+-
+vocab_transform.bias    | UNEXPECTED | 
+vocab_layer_norm.weight | UNEXPECTED | 
+vocab_projector.bias    | UNEXPECTED | 
+vocab_transform.weight  | UNEXPECTED | 
+vocab_layer_norm.bias   | UNEXPECTED | 
+pre_classifier.weight   | MISSING    | 
+pre_classifier.bias     | MISSING    | 
+classifier.weight       | MISSING    | 
+classifier.bias         | MISSING    | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
+[baseline] ep1 train_loss=0.679 train_acc=0.691 dev_loss=0.695 dev_acc=0.498
+[baseline] ep2 train_loss=0.659 train_acc=0.731 dev_loss=0.698 dev_acc=0.473
+/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/resource_tracker.py:475: UserWarning: resource_tracker: There appear to be 1 leaked semaphore objects to clean up at shutdown: {'/loky-24701-hzp760ot'}
+  warnings.warn(

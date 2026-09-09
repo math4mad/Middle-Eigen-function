@@ -26,7 +26,10 @@ from transformers import AutoModel
 MODEL_NAME = os.environ.get("MODEL_PATH", "models/AI-ModelScope/bert-base-uncased")
 if not os.path.isdir(MODEL_NAME):
     MODEL_NAME = "AI-ModelScope/bert-base-uncased"  # fall back to ModelScope hub id
-OUT_DIR = "outputs/stage2"
+OUT_DIR = os.environ.get("OUT_DIR", "outputs/stage2")
+# which matrices to profile: substring match minus excluded substrings (comma-separated)
+AB_SUBSTR = os.environ.get("ABLATE_SUBSTR", "output.dense")
+AB_EXCLUDE = tuple(x for x in os.environ.get("ABLATE_EXCLUDE", "attention,embeddings").split(",") if x)
 
 
 def spectra_of(model):
@@ -64,8 +67,9 @@ def main():
     model.eval()
 
     spec = spectra_of(model)
-    cproj = {k: v for k, v in spec.items() if "output.dense" in k and ".attention." not in k}
-    print(f"decomposed {len(spec)} matrices, {len(cproj)} mlp.c_proj (output.dense) matrices")
+    cproj = {k: v for k, v in spec.items()
+             if AB_SUBSTR in k and not any(x in k for x in AB_EXCLUDE)}
+    print(f"decomposed {len(spec)} matrices, {len(cproj)} target matrices (substr={AB_SUBSTR!r})")
 
     summary = {"model": MODEL_NAME, "n_matrices": len(spec), "matrices": {}}
     for name, s in spec.items():
@@ -86,7 +90,8 @@ def main():
     # ---- plot 1: spectra of the 12 mlp.c_proj matrices ----
     fig, ax = plt.subplots(figsize=(9, 5))
     for name, s in cproj.items():
-        ax.plot(np.arange(len(s)) / len(s), s / s[0], lw=1, alpha=0.7, label=f"L{int(name.split('.')[-4])}.c_proj")
+        ax.plot(np.arange(len(s)) / len(s), s / s[0], lw=1, alpha=0.7,
+                label=f"L{int(name.split('.')[-4])}.target")
     ax.set_xlabel("normalized singular-value index")
     ax.set_ylabel("sigma / sigma_max")
     ax.set_yscale("log")

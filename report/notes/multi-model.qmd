@@ -1,0 +1,139 @@
+---
+title: "多模型验证：松散谱假设跨架构稳健吗？"
+subtitle: "bert-base-uncased · electra-small · distilbert-base — RTE 10% few-shot"
+author: "math4mad"
+format:
+  html:
+    echo: true
+    warning: false
+jupyter: python3
+---
+
+```{python}
+#| include: false
+import json, os
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from great_tables import GT, html
+
+ROOT = next(p for p in ["../..", "..", "."] if os.path.isdir(os.path.join(p, "outputs", "multi_model")))
+SM = json.load(open(f"{ROOT}/outputs/multi_model/summary.json"))
+MODELS = list(SM.keys())
+GROUPS = ["baseline", "A", "B", "C"]
+GNAME = {"baseline": "基线", "A": "A 刚性骨架", "B": "B 松散谱", "C": "C 随机80%"}
+```
+
+# 1. 实验设置
+
+沿用[第一篇笔记](eigen-ablation.qmd)的三步消融法，在两个新架构上复跑（同一 `scripts/`，
+环境变量 `MODEL_PATH / ABLATE_SUBSTR` 参数化）：
+
+| 模型 | 消融目标矩阵 | 规模 | 超参 |
+|------|--------------|------|------|
+| bert-base-uncased | `encoder.layer.N.output.dense`（768×3072）×12 | 109M | lr 2e-5, 8 ep |
+| electra-small | `encoder.layer.N.output.dense`（256×1024）×12 | 13.5M | lr 1e-4, 10 ep |
+| distilbert-base | `transformer.layer.N.ffn.lin2`（768×3072）×6 | 66M | lr 2e-5, 8 ep |
+
+:::{.callout-note}
+**为什么 ELECTRA 换了超参**：lr 2e-5 时 ELECTRA-small 连基线都欠拟合（final train loss 0.66），
+四组无从比较。跨模型比较的有效性标准是**同一模型内部**四组超参一致——本表已满足。
+:::
+
+# 2. 谱形状：三种架构都是"中段占大头"
+
+```{python}
+#| echo: false
+rows = [{"模型": m,
+         "top 10% 能量": f"{SM[m]['spectra']['top10']*100:.1f}%",
+         "middle 80% 能量": f"{SM[m]['spectra']['mid80']*100:.1f}%",
+         "bottom 10% 能量": f"{SM[m]['spectra']['bot10']*100:.1f}%"} for m in MODELS]
+(GT(pd.DataFrame(rows)).tab_header(title=html("目标矩阵（MLP 输出投影）的平均能量分带")))
+```
+
+三个模型的 MLP 输出投影谱都呈"头部尖、中段平"形态：中间 80% 奇异值合计承载 **66–69%** 的
+谱能量。蒸馏（distilbert）并未让谱变得更"骨架化"——它的分带与 teacher 几乎相同。
+
+# 3. 四组消融的 dev 结果
+
+```{python}
+#| echo: false
+tab = []
+for g in GROUPS:
+    row = {"组": GNAME[g]}
+    for m in MODELS:
+        row[m] = f"{SM[m]['dev'][g]:.3f} / {SM[m]['dev_loss_final'][g]:.2f}"
+    tab.append(row)
+(GT(pd.DataFrame(tab))
+   .tab_header(title=html("best dev accuracy / final dev loss（RTE dev, 277 条）"),
+               subtitle=html("dev acc 取各组自身最优 epoch（同基线协议）")))
+```
+
+![](/figs/dev_curves.png)
+
+**可复现的三个跨模型信号**：
+
+1. **B ≥ A 复现**（dev acc：BERT 0.552>0.534，ELECTRA 0.509>0.498，DistilBERT 0.498≈0.502）。
+   更重要的是 final dev loss：ELECTRA 上 B=0.82 是全部组别（含基线 1.50！）最低，
+   BERT 上 B=0.91 << A=1.20。**只保留骨架方向的 A 组在收敛后期泛化崩坏最快**。
+2. **基线同样不是天花板**：ELECTRA 基线过拟合到 train loss 0.03 时 dev loss 反而高于 B 组；
+   "任何截断都有害"的情形（C 组优于基线）在 BERT 与 ELECTRA、DistilBERT 上都出现了。
+3. **C（随机保留 80%）在三个模型中都是截断组里的 dev-acc 第一或并列第一**——
+   "保留的数量/能量比位置重要"这一反假设侧同样跨模型成立。
+
+# 4. 入侵维度：骨架被砸后，学习流向弱方向
+
+```{python}
+#| echo: false
+fig, ax = plt.subplots(figsize=(8, 4))
+for m in MODELS:
+    ax.plot(range(1, 11), SM[m]["invasionB"], "o-", label=m)
+ax.axhline(0.1, color="k", ls="--", lw=0.8)
+ax.set_xlabel("decile of original singular-value rank (kept spectrum)")
+ax.set_ylabel("ΔW energy fraction")
+ax.set_title("group B: where fine-tuning 'invades'")
+ax.legend(fontsize=8)
+display(fig)
+```
+
+B 组的 $\Delta W$ 能量在三个模型上都**近似均匀甚至偏尾部**分布（对比：基线/A 组集中在头部
+十分位，BERT 基线 45%、A 组 63% 落在第 1 十分位）。也就是说：
+
+> 一旦最大方向被移除，微调不是"用剩余最强方向凑合"，而是把更新摊到大量中弱方向上——
+> 这些方向是可被动员的"泛化储备"。
+
+# 5. DistilBERT：一个诚实的 null case
+
+DistilBERT 上所有组 dev acc 都徘徊在 0.50–0.52、几乎无区分度。两种解读都成立且待区分：
+
+- 蒸馏后的 6 层模型在 249 样本 + 全参微调下本就学不到 NLI 结构（基线自己也只有 train acc 0.96 /
+  dev 0.50），实验设定对该模型**功效不足**；
+- 或假说的更强版本"松散谱承载泛化"需要预训练足够充分才成立——蒸馏压缩可能已把
+  可迁移性搬进少数方向。需要 **等能量截断** 或更大样本（30% RTE）的对照来裁决。
+
+# 6. 小结
+
+| 假设陈述 | BERT | ELECTRA | DistilBERT |
+|---|---|---|---|
+| 仅大特征值（骨架）不足以支撑泛化 | ✔ | ✔ | ~（无区分度）|
+| 中间谱优于纯骨架（B > A）| ✔ | ✔ | ≈ |
+| 中间谱优于全谱（B > 基线）| ✔(acc) ✗(loss) | ✔(loss) ✗(acc) | ≈ |
+| 数量/能量比位置重要（C 最优）| ✔ | ✔ | ✔ |
+
+**总体判定：假设的弱版本（"骨架不充分，中段是泛化的可动员储备"）在 2/3 个架构上复现；
+强版本（"中间谱 > 全谱/大特征值"）不成立。** 下一步：Qwen2.5-0.5B（LLM + LoRA）与
+RoBERTa，并把截断规则改为等能量版本以分离"位置 vs 能量"。
+
+# 7. 复现
+
+```bash
+git checkout multi-model
+# ELECTRA（镜像无 safetensors，需手动取 bin）：
+curl -sL "https://www.modelscope.cn/api/v1/models/google/electra-small-discriminator/repo?FilePath=pytorch_model.bin&Revision=master" -o <model_dir>/pytorch_model.bin
+MODEL_PATH=<electra_dir> LR=1e-4 EPOCHS=10 OUT_DIR=outputs/stage3_electra python scripts/stage3_ablate_train.py baseline A B C
+MODEL_PATH=<distil_dir> ABLATE_SUBSTR=ffn.lin2 OUT_DIR=outputs/stage3_distilbert python scripts/stage3_ablate_train.py baseline A B C
+python scripts/summarize_multi.py
+```
+
+注意：transformers v5 中 DistilBERT 的 FFN 权重名为 `ffn.lin1/lin2`（旧版为 `fc1/fc2`），
+消融目标由 `ABLATE_SUBSTR` 环境变量指定。

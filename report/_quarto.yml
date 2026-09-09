@@ -9,7 +9,9 @@ website:
       - href: index.qmd
         text: Home
       - file: notes/eigen-ablation.qmd
-        text: "Ablation Note"
+        text: "Ablation Note (BERT)"
+      - file: notes/multi-model.qmd
+        text: "Multi-Model"
       - href: https://github.com/math4mad/Middle-Eigen-function
         text: GitHub
   repo-url: https://github.com/math4mad/Middle-Eigen-function
