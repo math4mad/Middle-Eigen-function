@@ -24,11 +24,15 @@ create local env
 
 ## install package 
   - numpy      
-  - scipy   for matrix opreation 
+  - scipy   for matrix operation 
+  - loralib  for loare operation 
   - pytorch for neural network training and test 
   - matplotlib for bench quality  viz
-  - great_tables   for table 
+  - polars for data manipulation
+  - great_tables   for table manipulation
+  
 
 
-##. Request
- if  workin good you can create  requiremsnts.txt  file
+## Request
+ if  working good you can create  requirements.txt  file
+ 

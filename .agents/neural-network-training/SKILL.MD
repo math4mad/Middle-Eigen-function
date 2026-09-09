@@ -1,7 +1,7 @@
 ---
 name: neural-network-training
 description: >-
-  traing neural netowk 
+  training neural network 
 license: Apache-2.0
 compatibility: "Requires Python 3.8+"
 metadata:
@@ -19,4 +19,8 @@ general method of traing neural network by pytorch
 
 ## Instructions
 
-   follow : https://docs.pytorch.org/docs/2.14/index.html
+  - follow : https://docs.pytorch.org/docs/2.14/index.html
+  - based on  M1 pro MacBook pro  16 inch  10 core cpu , 16 core gpu , 32+512   select a  moderate   BERT series model  as our expreiment model 
+  - pytorch using  mps 
+
+  
