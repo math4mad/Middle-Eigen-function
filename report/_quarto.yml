@@ -12,6 +12,8 @@ website:
         text: "Ablation Note (BERT)"
       - file: notes/multi-model.qmd
         text: "Multi-Model"
+      - file: notes/hybrid.qmd
+        text: "Hybrid Splice"
       - href: https://github.com/math4mad/Middle-Eigen-function
         text: GitHub
   repo-url: https://github.com/math4mad/Middle-Eigen-function
