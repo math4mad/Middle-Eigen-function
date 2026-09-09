@@ -10,6 +10,8 @@ website:
         text: Home
       - file: notes/eigen-ablation.qmd
         text: "Ablation Note (BERT)"
+      - file: notes/qwen-deep.qmd
+        text: "Qwen Deep-Dive"
       - file: notes/multi-model.qmd
         text: "Multi-Model"
       - file: notes/hybrid.qmd

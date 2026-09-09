@@ -1,0 +1,140 @@
+device: mps model: /Users/mac/Programming/code-2026/Middle-Eigen-function/models/models/Qwen--Qwen2.5-0.5B/snapshots/master
+qwen RTE: train=249 dev=277
+
+===== group A_e =====
+Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]Loading weights: 100%|██████████| 290/290 [00:00<00:00, 3435.73it/s]
+[transformers] [1mQwen2ForSequenceClassification LOAD REPORT[0m from: /Users/mac/Programming/code-2026/Middle-Eigen-function/models/models/Qwen--Qwen2.5-0.5B/snapshots/master
+Key          | Status  | 
+-------------+---------+-
+score.weight | MISSING | 
+
+Notes:
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
+group A_e: trainable params 4,400,896
+[A_e] ep1 train_loss=0.840 train_acc=0.631 dev_loss=1.419 dev_acc=0.495
+[A_e] ep2 train_loss=0.442 train_acc=0.775 dev_loss=1.041 dev_acc=0.491
+[A_e] ep3 train_loss=0.262 train_acc=0.888 dev_loss=1.126 dev_acc=0.545
+[A_e] ep4 train_loss=0.105 train_acc=0.980 dev_loss=1.268 dev_acc=0.502
+[A_e] ep5 train_loss=0.039 train_acc=0.992 dev_loss=1.702 dev_acc=0.520
+
+===== group B_e =====
+Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]Loading weights:   0%|          | 1/290 [00:00<03:27,  1.40it/s]Loading weights: 100%|██████████| 290/290 [00:00<00:00, 374.13it/s]
+[transformers] [1mQwen2ForSequenceClassification LOAD REPORT[0m from: /Users/mac/Programming/code-2026/Middle-Eigen-function/models/models/Qwen--Qwen2.5-0.5B/snapshots/master
+Key          | Status  | 
+-------------+---------+-
+score.weight | MISSING | 
+
+Notes:
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
+group B_e: trainable params 4,400,896
+[B_e] ep1 train_loss=0.737 train_acc=0.691 dev_loss=1.406 dev_acc=0.560
+[B_e] ep2 train_loss=0.255 train_acc=0.908 dev_loss=1.339 dev_acc=0.516
+[B_e] ep3 train_loss=0.047 train_acc=0.992 dev_loss=1.512 dev_acc=0.545
+[B_e] ep4 train_loss=0.006 train_acc=1.000 dev_loss=1.666 dev_acc=0.527
+[B_e] ep5 train_loss=0.002 train_acc=1.000 dev_loss=1.775 dev_acc=0.560
+
+===== group T5 =====
+Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]Loading weights:   0%|          | 1/290 [00:00<01:30,  3.21it/s]Loading weights: 100%|██████████| 290/290 [00:00<00:00, 763.51it/s]
+[transformers] [1mQwen2ForSequenceClassification LOAD REPORT[0m from: /Users/mac/Programming/code-2026/Middle-Eigen-function/models/models/Qwen--Qwen2.5-0.5B/snapshots/master
+Key          | Status  | 
+-------------+---------+-
+score.weight | MISSING | 
+
+Notes:
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
+group T5: trainable params 4,400,896
+[T5] ep1 train_loss=0.928 train_acc=0.679 dev_loss=1.414 dev_acc=0.556
+[T5] ep2 train_loss=0.341 train_acc=0.859 dev_loss=1.290 dev_acc=0.549
+[T5] ep3 train_loss=0.126 train_acc=0.968 dev_loss=1.343 dev_acc=0.560
+[T5] ep4 train_loss=0.025 train_acc=1.000 dev_loss=1.433 dev_acc=0.549
+[T5] ep5 train_loss=0.003 train_acc=1.000 dev_loss=1.537 dev_acc=0.545
+
+===== group T20 =====
+Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]Loading weights:   0%|          | 1/290 [00:00<02:35,  1.86it/s]Loading weights: 100%|██████████| 290/290 [00:00<00:00, 502.43it/s]
+[transformers] [1mQwen2ForSequenceClassification LOAD REPORT[0m from: /Users/mac/Programming/code-2026/Middle-Eigen-function/models/models/Qwen--Qwen2.5-0.5B/snapshots/master
+Key          | Status  | 
+-------------+---------+-
+score.weight | MISSING | 
+
+Notes:
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
+group T20: trainable params 4,400,896
+[T20] ep1 train_loss=0.791 train_acc=0.610 dev_loss=1.271 dev_acc=0.495
+[T20] ep2 train_loss=0.509 train_acc=0.723 dev_loss=1.188 dev_acc=0.458
+[T20] ep3 train_loss=0.344 train_acc=0.851 dev_loss=1.295 dev_acc=0.473
+[T20] ep4 train_loss=0.156 train_acc=0.956 dev_loss=1.365 dev_acc=0.484
+[T20] ep5 train_loss=0.056 train_acc=1.000 dev_loss=1.648 dev_acc=0.487
+
+===== group T30 =====
+Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]Loading weights:   0%|          | 1/290 [00:00<01:30,  3.19it/s]Loading weights: 100%|██████████| 290/290 [00:00<00:00, 789.79it/s]
+[transformers] [1mQwen2ForSequenceClassification LOAD REPORT[0m from: /Users/mac/Programming/code-2026/Middle-Eigen-function/models/models/Qwen--Qwen2.5-0.5B/snapshots/master
+Key          | Status  | 
+-------------+---------+-
+score.weight | MISSING | 
+
+Notes:
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
+group T30: trainable params 4,400,896
+[T30] ep1 train_loss=0.893 train_acc=0.566 dev_loss=1.034 dev_acc=0.477
+[T30] ep2 train_loss=0.639 train_acc=0.635 dev_loss=0.939 dev_acc=0.516
+[T30] ep3 train_loss=0.459 train_acc=0.783 dev_loss=0.947 dev_acc=0.531
+[T30] ep4 train_loss=0.218 train_acc=0.944 dev_loss=1.022 dev_acc=0.498
+[T30] ep5 train_loss=0.056 train_acc=0.996 dev_loss=1.217 dev_acc=0.502
+
+===== group E6 =====
+Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]Loading weights:   0%|          | 1/290 [00:00<01:30,  3.21it/s]Loading weights: 100%|██████████| 290/290 [00:00<00:00, 793.94it/s]
+[transformers] [1mQwen2ForSequenceClassification LOAD REPORT[0m from: /Users/mac/Programming/code-2026/Middle-Eigen-function/models/models/Qwen--Qwen2.5-0.5B/snapshots/master
+Key          | Status  | 
+-------------+---------+-
+score.weight | MISSING | 
+
+Notes:
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
+group E6: trainable params 4,400,896
+[E6] ep1 train_loss=1.107 train_acc=0.550 dev_loss=1.157 dev_acc=0.534
+[E6] ep2 train_loss=0.568 train_acc=0.755 dev_loss=1.073 dev_acc=0.516
+[E6] ep3 train_loss=0.240 train_acc=0.920 dev_loss=1.143 dev_acc=0.527
+[E6] ep4 train_loss=0.045 train_acc=0.996 dev_loss=1.226 dev_acc=0.542
+[E6] ep5 train_loss=0.004 train_acc=1.000 dev_loss=1.492 dev_acc=0.556
+
+===== group M12 =====
+Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]Loading weights: 100%|██████████| 290/290 [00:00<00:00, 4489.73it/s]
+[transformers] [1mQwen2ForSequenceClassification LOAD REPORT[0m from: /Users/mac/Programming/code-2026/Middle-Eigen-function/models/models/Qwen--Qwen2.5-0.5B/snapshots/master
+Key          | Status  | 
+-------------+---------+-
+score.weight | MISSING | 
+
+Notes:
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
+group M12: trainable params 4,400,896
+[M12] ep1 train_loss=0.962 train_acc=0.614 dev_loss=1.482 dev_acc=0.505
+[M12] ep2 train_loss=0.664 train_acc=0.707 dev_loss=1.367 dev_acc=0.477
+[M12] ep3 train_loss=0.395 train_acc=0.831 dev_loss=1.306 dev_acc=0.473
+[M12] ep4 train_loss=0.150 train_acc=0.964 dev_loss=1.326 dev_acc=0.502
+[M12] ep5 train_loss=0.052 train_acc=1.000 dev_loss=1.495 dev_acc=0.495
+
+===== group L6 =====
+Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]Loading weights: 100%|██████████| 290/290 [00:00<00:00, 3385.20it/s]
+[transformers] [1mQwen2ForSequenceClassification LOAD REPORT[0m from: /Users/mac/Programming/code-2026/Middle-Eigen-function/models/models/Qwen--Qwen2.5-0.5B/snapshots/master
+Key          | Status  | 
+-------------+---------+-
+score.weight | MISSING | 
+
+Notes:
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
+group L6: trainable params 4,400,896
+[L6] ep1 train_loss=0.949 train_acc=0.570 dev_loss=1.236 dev_acc=0.509
+[L6] ep2 train_loss=0.668 train_acc=0.691 dev_loss=1.088 dev_acc=0.523
+[L6] ep3 train_loss=0.470 train_acc=0.783 dev_loss=0.954 dev_acc=0.545
+[L6] ep4 train_loss=0.256 train_acc=0.900 dev_loss=0.964 dev_acc=0.581
+[L6] ep5 train_loss=0.088 train_acc=1.000 dev_loss=1.006 dev_acc=0.585
+
+final dev accuracy:
+  A_e       dev_acc=0.545 (best ep 3)
+  B_e       dev_acc=0.560 (best ep 1)
+  T5        dev_acc=0.560 (best ep 3)
+  T20       dev_acc=0.495 (best ep 1)
+  T30       dev_acc=0.531 (best ep 3)
+  E6        dev_acc=0.556 (best ep 5)
+  M12       dev_acc=0.505 (best ep 1)
+  L6        dev_acc=0.585 (best ep 5)

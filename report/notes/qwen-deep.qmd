@@ -1,0 +1,120 @@
+---
+title: "Qwen2.5-0.5B + LoRA 深度验证：修正与新发现"
+subtitle: "等能量对照 · 切除剂量曲线 · 分层定位 —— 8 组消融"
+author: "math4mad"
+format:
+  html:
+    echo: true
+    warning: false
+jupyter: python3
+---
+
+```{python}
+#| include: false
+import json, os
+import numpy as np
+import pandas as pd
+from great_tables import GT, html
+
+ROOT = next(p for p in ["../..", "..", "."] if os.path.isdir(os.path.join(p, "outputs", "stage5_qwen_deep")))
+ALL = {**json.load(open(f"{ROOT}/outputs/stage3_qwen/results.json")),
+       **json.load(open(f"{ROOT}/outputs/stage5_qwen_deep/results.json"))}
+GROUPS = ["baseline", "A", "B", "C", "A_e", "B_e", "T5", "T20", "T30", "E6", "M12", "L6"]
+DESC = {"baseline": "不消融", "A": "只留 top10%", "B": "只留 middle80%", "C": "随机留80%",
+        "A_e": "A + 能量补齐100%", "B_e": "B + 能量补齐100%",
+        "T5": "切 top5%，其余保留", "T20": "切 top20%", "T30": "切 top30%",
+        "E6": "只切前6层 top10%", "M12": "只切中12层 top10%", "L6": "只切后6层 top10%"}
+```
+
+# 1. 背景
+
+[Multi-Model 笔记](multi-model.qmd)里 Qwen2.5-0.5B + LoRA 是假设的"高光时刻"：
+B（0.581）> 基线（0.527）>> A（0.462）。本轮（stage5.md）对它做三项补验：
+**等能量对照**（BERT 上证明位置效应的关键实验）、**切除剂量曲线**、**分层定位**。
+全部沿用同一协议：RTE 10%（249 条）、LoRA r=8（可训练 0.88%）、5 epochs、dev 277。
+
+# 2. 总表
+
+```{python}
+#| echo: false
+rows = []
+for g in GROUPS:
+    r = ALL[g]; b = r["best"]
+    vals = list(r["invasions"].values())
+    drel = float(np.mean([v.get("delta_rel_fro", np.nan) for v in vals])) if "delta_rel_fro" in vals[0] else None
+    ek = np.mean([v["energy_kept"] for v in r["ablation"].values() if isinstance(v["kept"], int)])
+    rows.append({"组": g, "操作": DESC[g], "best dev": round(b["dev_acc"], 3),
+                 "train@best": round(b["train_acc"], 3), "final dev loss": round(r["final"]["dev_loss"], 2),
+                 "谱保留能量": f"{ek*100:.0f}%",
+                 "‖ΔW/‖W‖": (f"{drel*100:.2f}%" if drel is not None else "—")})
+(GT(pd.DataFrame(rows)).tab_header(
+    title=html("Qwen2.5-0.5B + LoRA：12 组消融全景（RTE）"),
+    subtitle=html("dev=277，单 seed；±0.03 视为噪声带；‖ΔW‖ 为训练后 LoRA 合并增量相对范数"))
+   .tab_options(table_font_size=13))
+```
+
+![](/figs/qwen_deep.png)
+
+# 3. 修正：LLM+LoRA 场景下，A/B 差距主要是"能量"
+
+等能量对照把今早的结论剪短了一截：
+
+| 对比 | 差距 |
+|---|---|
+| A (0.462) vs B (0.581) | **+0.119** |
+| A_e (0.545) vs B_e (0.560)（都补齐到 100% 能量）| **+0.015（噪声带内）** |
+
+把 A 的 10 个骨架方向放大到全能量，dev 从 0.462 → 0.545（+8.3 点）——
+**A 的崩溃七成是"丢了 75% 谱能量"，不是"骨架位置不行"**。
+这与 LoRA 入侵维度的老证据自洽：LoRA 的 ΔW 在谱位置上近乎均匀（≈0.1/十分位），
+它本来就不怎么消费头部方向，所以"留哪段"对它影响小、"有多少能量可用"影响大。
+
+> 对照组：BERT **全参微调**上等能量后 B_e−A_e = **+0.080**（见 [Ablation Note](eigen-ablation.qmd)）。
+> **位置效应真实存在，但它是"全参微调现象"，不是普适定律。** 微调方法决定了谱段的重要性——
+> 这本身就是对"泛化住在中段"假设的重要限定。
+
+# 4. 剂量曲线：切多狠，比切哪里更敏感
+
+T5 (0.560) ≈ B (0.581) > T30 (0.531) > T20 (0.495)：非单调、全在噪声带边缘游走，
+但**没有任何剂量段显示出"切骨架"的可靠收益**——进一步支持第 3 节：
+LoRA 场景下头部谱不是"有害记忆库"，能量配比才是主效应。
+
+# 5. 新发现：有害记忆住在深层骨架（本轮最干净的一刀）
+
+| 组 | 切谁的 top10% | best dev | final dev loss |
+|---|---|---|---|
+| baseline | 不切 | 0.527 | 1.18 |
+| E6 | 前 6 层 | 0.556 | 1.49 |
+| M12 | 中 12 层 | **0.505** ⬇ | 1.50 |
+| **L6** | **后 6 层** | **0.585** ⬆ 全场最佳 | **1.01** 全场最低 |
+| B | 全部 24 层 | 0.581 | 1.44 |
+
+- **只切后 6 层的骨架 = 切全部的效果，且过拟合最轻**（final dev loss 1.01，全场最低；
+  B 组虽然同分但 dev loss 1.44 明显更飘）。
+- 中层骨架是任务刚需：M12 是唯一显著掉到基线以下的组。
+- LoRA 的 ΔW 范数在 L6 最大（0.10%）——删掉深层骨架后，模型用**最多的适应量**去填，
+  换来的是最克制的泛化误差：**深层 top 方向承载的是"预训练目标记忆"，删之腾出空间；
+  中层的 top 方向已经是"通用计算骨架"，删之伤本**。
+
+这与 NLP 可解释性文献的常见分层图景一致（底层句法/中层语义/高层任务风格），
+但这里是**用谱消融 + 泛化误差直接测出来的**。
+
+# 6. 结论与限定
+
+:::{.callout-warning}
+1. **修正**：Qwen+LoRA 的 A vs B 差距主要是能量效应（位置残差 +0.015 在噪声内）；
+   "位置效应"目前最稳的证据在 BERT 全参微调（等能量 +0.080）。**微调方式中介了假设的成立形式**。
+2. **新命题（可检验）**："预训练有害记忆定位在深层 top 谱" —— L6 以最小代价（24 层里动 6 层的 10%）
+   取得全场最佳 dev + 最低 dev loss。
+3. 限定：单 seed、dev 277（±3%）、RTE 单任务；E6/M12/L6 的差距（0.505 vs 0.585）超出噪声带，
+   但 B vs L6（0.581 vs 0.585）不可区分。
+4. 下一步：① L6 的多 seed 复验 + L3/L12 细化边界；② 30% 训练量看结论随数据规模的演化；
+   ③ Qwen2.5-1.5B 看是否随规模保持。
+:::
+
+## 复现
+
+```bash
+MODEL_PATH=<qwen> OUT_DIR=outputs/stage5_qwen_deep \
+  python scripts/stage3_llm_lora.py A_e B_e T5 T20 T30 E6 M12 L6
+```

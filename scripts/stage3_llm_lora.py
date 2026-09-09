@@ -45,9 +45,17 @@ def keep_mask_group(n, group, rng):
     k_top = max(1, int(np.ceil(n * 0.10)))
     k_bot = max(1, int(np.ceil(n * 0.10)))
     mask = np.zeros(n, dtype=bool)
-    if group == "A":
+    frac = None
+    if group in ("T5", "T20", "T30"):           # dose-response: drop top-f, keep rest
+        frac = {"T5": 0.05, "T20": 0.20, "T30": 0.30}[group]
+        mask[int(n * frac):] = True
+    elif group == "A":
+        mask[:k_top] = True
+    elif group == "A_e":                          # energy-preserved skeleton
         mask[:k_top] = True
     elif group == "B":
+        mask[k_top:n - k_bot] = True
+    elif group == "B_e":
         mask[k_top:n - k_bot] = True
     elif group == "C":
         idx = rng.permutation(n)[: int(n * 0.80)]
@@ -56,23 +64,42 @@ def keep_mask_group(n, group, rng):
         mask[:] = True
     else:
         raise ValueError(group)
-    return mask
+    return mask, (group.endswith("_e"))
+
+
+LAYER_SETS = {"E6": range(0, 6), "M12": range(6, 18), "L6": range(18, 24)}
 
 
 def ablate_model(model, group):
     rng = np.random.default_rng(SEED)
+    lset = LAYER_SETS.get(group)
     report = {}
     with torch.no_grad():
         for name, mod in model.named_modules():
             if not (name.endswith(AB_SUBSTR) and isinstance(mod, nn.Linear)):
                 continue
+            li = int(name.split("layers.")[1].split(".")[0])
             W = mod.weight.detach().float().numpy()
-            U, S, Vt = np.linalg.svd(W, full_matrices=False)
-            mask = keep_mask_group(len(S), group, rng)
-            S2 = S * mask
-            mod.weight.copy_(torch.from_numpy((U * S2) @ Vt).to(mod.weight.dtype))
+            if lset is not None:
+                # layer-targeted: drop top-10% ONLY on layers in the set, keep others intact
+                if li not in lset:
+                    report[name] = {"kept": "intact", "total": W.shape[0], "energy_kept": 1.0}
+                    continue
+                mask = np.ones(min(W.shape), dtype=bool)
+                mask[: max(1, int(np.ceil(min(W.shape) * 0.10)))] = False
+                U, s, Vt = np.linalg.svd(W, full_matrices=False)
+                S2 = s * mask
+            else:
+                U, s, Vt = np.linalg.svd(W, full_matrices=False)
+                mask, energy_p = keep_mask_group(len(s), group, rng)
+                S2 = s * mask
+                if energy_p and (S2 ** 2).sum() > 0:
+                    S2 = S2 * np.sqrt((s ** 2).sum() / (S2 ** 2).sum())
+            Wn = (U * S2) @ Vt
+            mod.weight.copy_(torch.from_numpy(Wn).to(mod.weight.dtype))
             report[name] = {"kept": int(mask.sum()), "total": int(mask.size),
-                            "energy_kept": float((S2 ** 2).sum() / (S ** 2).sum())}
+                            "energy_kept": float((S2 ** 2).sum() / (s ** 2).sum()),
+                            "backfill_gap": float(np.linalg.norm(W - Wn) / np.linalg.norm(W))}
     return report
 
 
@@ -114,7 +141,8 @@ def invasions(w0, delta):
     best = cos.max(axis=1)
     rank = cos.argmax(axis=1) / V0t.shape[0]
     wh, _ = np.histogram(rank, bins=10, range=(0, 1), weights=best / best.sum())
-    return {"rank_frac_top_delta_dirs": rank[:8].round(3).tolist(),
+    return {"delta_rel_fro": float(np.linalg.norm(delta) / max(np.linalg.norm(w0), 1e-12)),
+            "rank_frac_top_delta_dirs": rank[:8].round(3).tolist(),
             "cos_to_original": best[:8].round(3).tolist(),
             "energy_by_decile_of_original_spectrum": wh.round(3).tolist()}
 
