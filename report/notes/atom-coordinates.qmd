@@ -139,18 +139,31 @@ if b and gg:
 
 ```{python}
 #| echo: false
-if T13:
-    rows = [{"层": k, "τ(σ序,功能序)": round(v["kendall_tau_sigma_vs_importance"], 2),
-             "p": f"{v['tau_p']:.1e}", "最大σ带 Δloss": round(v["band"][0]["dloss"], 4),
-             "最小σ带 Δloss": round(v["band"][-1]["dloss"], 4),
-             "最重要8方向落在σ前10%": f"{v['top8_in_sigma_top10pct']}/8"} for k, v in T13["per_layer"].items()]
-    (GT(pd.DataFrame(rows)).tab_header(title=html("单方向损伤：σ 序与功能序一致吗？"),
-        subtitle=html(f"基线 loss={T13['baseline_loss']:.3f}（pad 已 mask）；τ 均值 = {T13['mean_kendall_tau']:+.2f}；"
-                      f"随机期望下'最重要8方向落在σ前10%'≈0.8/8"))
+T13A = ld(f"{ROOT}/outputs/stage13_attn/two_orderings.json")   # 注意力 q_proj 版
+def trows(T, tag):
+    if not T:
+        return []
+    return [{"探针": tag, "层": k, "τ(σ序,功能序)": round(v["kendall_tau_sigma_vs_importance"], 2),
+             "p": round(v["tau_p"], 3), "最大σ带 Δloss": round(v["band"][0]["dloss"], 3),
+             "最小σ带 Δloss": round(v["band"][-1]["dloss"], 3),
+             "最重要8方向落在σ前10%": f"{v['top8_in_sigma_top10pct']}/8"}
+            for k, v in T["per_layer"].items()]
+_rows = trows(T13, "MLP down_proj") + trows(T13A, "注意力 q_proj")
+if _rows:
+    (GT(pd.DataFrame(_rows)).tab_header(title=html("单方向损伤：σ 序 vs 功能序（两种矩阵家族）"),
+        subtitle=html("零训练前向、pad-masked 语言建模损失；随机期望下『最重要8方向落在σ前10%』≈0.8/8；"
+                      "τ≈0 ⇒ 大小序与功能序无关；整带 Δloss 仍递减 ⇒ 粗尺度上能量序有效"))
        .tab_options(table_font_size=12))
-    print("各分位带的平均 Δloss（1=最大σ带 → 10=最小σ带）：")
-    print("  " + "  ".join(f"{x:+.3f}" for x in T13["mean_band_dloss"]))
-    print("对应能量占比：  " + "  ".join(f"{x:.3f}" for x in T13["mean_band_energy"]))
+    if T13:
+        print("MLP down_proj 各分位带 Δloss（1=最大σ带 → 10=最小σ带）：")
+        print("  " + "  ".join(f"{x:+.3f}" for x in T13["mean_band_dloss"]))
+    if T13A:
+        print("注意力 q_proj 各分位带 Δloss：")
+        print("  " + "  ".join(f"{x:+.3f}" for x in T13A["mean_band_dloss"]))
+    if T13 and T13A:
+        print(f"τ 均值：MLP down_proj = {T13['mean_kendall_tau']:+.2f}，"
+              f"注意力 q_proj = {T13A['mean_kendall_tau']:+.2f} ⇒ "
+              f"**两类矩阵上 σ 序都不预测功能序**（尽管 q_proj 的谱陡峭度 rel_perm≈1.0 远高于 down_proj≈0.47）")
 else:
     print("(损伤探针尚未完成)")
 ```
@@ -289,13 +302,15 @@ else:
 3. **但取向并非完全无关（实验 A）**：把 LoRA 输入侧换成等容量 Haar 随机正交基，
    dev best 0.538 vs 控制 0.556（**−0.018**；末 3 epoch 均值 −0.011）⇒ 学习自己挑的方向仍略优于随机方向，
    代价约半个噪声带。与"存在功能序、但它不等于 σ 序"一致。
-4. **功能序可以直接测，而且它与 σ 序不相关（实验 C，已跑完）**：零训练单方向损伤（pad-masked 语言建模损失）给出
-   **mean Kendall τ(σ序, 功能序) = −0.22**（L0 −0.30, p=6e-4；L20 −0.13, p=0.15）——
-   **单个方向越"大"并不越重要，甚至略偏反**。同时：
-   · **整带**尺度上能量序仍然有效（削掉 top 带 Δloss +0.319，削掉 tail 带 +0.008，相差 40 倍）；
-   · 但**深层 L20 最重要的 8 个方向里 0/8 落在 σ 前 10%**，全在第 2–8 带（随机期望 0.8/8）。
+4. **功能序可以直接测，而且它与 σ 序不相关（实验 C，两类矩阵都测了）**：零训练单方向损伤
+   （pad-masked 语言建模损失）给出 **mean Kendall τ(σ序, 功能序) = −0.22（MLP down_proj）
+   / −0.12（注意力 q_proj）** ⇒ **单个方向越"大"并不越重要**。同时：
+   · **整带**尺度上能量序仍然有效（MLP：削 top 带 Δloss +0.319 vs 削 tail 带 +0.008，相差 40 倍）；
+   · 但**深层 L20 最重要的 8 个方向里 0/8 落在 σ 前 10%**（注意力 L20 也只有 2/8，随机期望 0.8/8）。
+   · 值得注意：**q_proj 的谱更陡（rel_perm≈1.0）却与功能序更不相关（τ≈0）**，
+     而 down_proj 的 top 带损伤代价大 6 倍 —— 说明"谱陡峭度"与"功能可定位性"是**两回事**。
    ⇒ 这就是"数据科学按大小排、智能科学按功能排"的定量版本：**大小序在粗尺度（带）上够用，
-   在细尺度（单个方向、深层）上失效** —— 而我们的 A/B/C、TAIL/MID 切割恰好是在细尺度上做手术。
+   在细尺度（单个方向）上失效** —— 而我们的 A/B/C、TAIL/MID 切割恰好是在细尺度上做手术。
 5. **两条序都不是最自然的坐标（实验 D / Stage 14 预注册）**：注意力的天然单位是 **rank-1 原子**，
    甚至必须是 q/k 的**原子对** $(i,j)$（其权重为 $\sigma^q_i\sigma^k_j\,u^{q\top}_iu^k_j$，推导见
    `stage/stage14.md`）——即"重述参数"应挂在原子上，而不是挂在稠密矩阵的输入/输出半边。
