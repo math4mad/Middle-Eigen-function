@@ -295,6 +295,32 @@ else:
 
 ![](/figs/stage12_arms.png)
 
+:::{.callout-warning title="⚠️ 探针的混淆项与更干净的版本（PROBE_F=1.0）"}
+上面用的"污染指纹"来自 **f=0.5 的混合流**，那里的 $\Delta W$ 同时包含**任务学习方向**与**垃圾方向**，
+两者混在一起 ⇒ `TGT` 删掉的其实是"学习自己要用的方向"，所以它反而**最差**（−0.025）就不足为奇。
+更干净的对照是**纯垃圾探针**（`PROBE_F=1.0`：只用伪标注句对训练，完全不含干净样本），
+结果在 `outputs/stage12_pure/`（跑法：
+`JUNK_FRACS=0.5 PROBE_F=1.0 ARMS=tgt,rand,spec K=2 python scripts/stage12_targeted_deletion.py`）：
+
+```{python}
+#| echo: false
+S12P = ld(f"{ROOT}/outputs/stage12_pure/results.json") or ld(f"{ROOT}/outputs/stage12_pure/results_partial.json")
+if S12P:
+    pr = {v["arm"]: v["best"]["dev_acc"] for v in S12P.values() if "best" in v and "arm" in v}
+    print("纯垃圾探针下的三组（同一 f=0.5 训练流、同 seed，参照 noop=0.527）：")
+    for a in ("tgt", "rand", "spec"):
+        if a in pr:
+            print(f"  {a:5s} dev={pr[a]:.3f}  Δ vs noop={pr[a]-0.527:+.3f}")
+    if "tgt" in pr and "rand" in pr:
+        d = pr["tgt"] - pr["rand"]
+        print(f"TGT − RAND = {d:+.3f}"
+              + (" ⇒ 仍在噪声带内：即便用纯垃圾指纹，污染也不可定点删除" if abs(d) < 0.030
+                 else " ⇒ 超出噪声带：纯垃圾指纹下 TGT 与 RAND 分离，污染可定位"))
+else:
+    print("(纯垃圾探针版尚未完成 —— 命令见上)")
+```
+:::
+
 # 7. 结论
 
 :::{.callout-important title="坐标之争的当前判决（本页数字随运行自动更新）"}
@@ -321,8 +347,20 @@ else:
    甚至必须是 q/k 的**原子对** $(i,j)$（其权重为 $\sigma^q_i\sigma^k_j\,u^{q\top}_iu^k_j$，推导见
    `stage/stage14.md`）——即"重述参数"应挂在原子上，而不是挂在稠密矩阵的输入/输出半边。
    预注册预言：`ATOM64` ≫ `RAND64`（同容量）且 `ATOM64` ≈ `lora8`（**550 倍**少的参数）。
-6. **待办**：seed 2 复验（实验 A/B）、MLP 版 ATOM/RAND（判"矩阵类型"这条）、
-   以及 §4 的 τ 若接近 0 则把 stage12 的 `TGT/RAND/SPEC` 定向删除实验提上主线。
+6. **减法侧的判决（实验 E / Stage 12，两种探针都做了）**：在同一污染训练流上删**同样条数**的原子，
+   三套坐标的 best dev（f=0.5、seed1、noop=0.527）：
+
+   | 探针 | TGT | RAND | SPEC |
+   |---|---|---|---|
+   | 混合指纹（f=0.5 流的 ΔW） | 0.502 (−0.025) | 0.516 (−0.011) | 0.523 (−0.004) |
+   | **纯垃圾指纹**（f=1.0 流的 ΔW） | **0.495 (−0.032)** | 0.516 (−0.011) | 0.523 (−0.004) |
+
+   ⇒ **三组全部 ≤ 0，而且"按污染指纹删"删得最狠**（TGT−RAND = −0.022）。
+   按预注册判据落第三档：**撤回"删除式手术能提升泛化"这条路线，Stage 10 的在线监测才是可继续的方向**。
+   （诚实记录：TGT 删掉的能量 0.37% > RAND 0.25% > SPEC 0.19%，能量未严格配平 ⇒ TGT 的一部分损失是能量损失；
+   但方向上没有任何一组出现"删了反而更好"的信号。）
+7. **待办**：实验 A/B 的 seed 3、Stage 12 的能量严格配平版（按 σ² 等量随机选原子）、
+   以及把"删不动污染"与"垃圾写在中带"合起来重估 Stage 10 的报警统计量（用 mid_E/rel 的联合量）。
 :::{.callout-important title="坐标之争的当前判决（本页数字随运行自动更新）"}
 1. **σ 序携带的信息量是"矩阵类型"的函数**：注意力 rel_perm 0.82–1.04，MLP `down_proj` 0.45–0.49
    ⇒ 本项目此前所有"按大小切"的实验都做在最平坦的那类矩阵上，

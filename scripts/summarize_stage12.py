@@ -32,9 +32,10 @@ for f in by_frac:
         if a not in sub:
             continue
         r = sub[a]
+        fin = r.get("final") or r["history"][-1]
         rows.append({"f": f, "arm": a, "seed": r["seed"], "dev": r["best"]["dev_acc"],
-                     "dev_last": r["final"]["dev_acc"], "train": r["final"]["train_acc"],
-                     "dev_loss": r["final"]["dev_loss"],
+                     "dev_last": fin["dev_acc"], "train": fin["train_acc"],
+                     "dev_loss": fin["dev_loss"],
                      "delta_vs_noop": r["best"]["dev_acc"] - base,
                      "E_removed": r.get("energy_removed_mean", 0.0),
                      "mean_σrank_of_removed": float(np.mean(r.get("removed_rank_frac", [np.nan])))

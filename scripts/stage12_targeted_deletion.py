@@ -53,6 +53,7 @@ SEEDS = [int(x) for x in os.environ.get("SEEDS", "1").split(",")]
 JUNK_FRACS = [float(x) for x in os.environ.get("JUNK_FRACS", "0.5,0.25").split(",")]
 ARMS = os.environ.get("ARMS", "noop,tgt,rand,spec").split(",")
 K = int(os.environ.get("K", "2"))
+PROBE_F = float(os.environ.get("PROBE_F", "-1"))    # 探针用的注入比例（默认=当组 f；设 1.0 = 纯垃圾探针）
 EPOCHS = int(os.environ.get("EPOCHS", "5"))
 BATCH = int(os.environ.get("BATCH", "16"))
 
@@ -69,7 +70,11 @@ TARGETS = None          # filled with the down_proj module names
 
 
 def stream(frac_junk, tok, clean_d, cols):
-    n = int(round(len(clean_d) * frac_junk / (1 - frac_junk))) if frac_junk > 0 else 0
+    # f>=1 ⇒ 纯垃圾流（用与干净子集等量的伪标注样本），用于"污染方向"的纯净探针
+    if frac_junk >= 1.0:
+        n = len(clean_d)
+    else:
+        n = int(round(len(clean_d) * frac_junk / (1 - frac_junk))) if frac_junk > 0 else 0
     junk, _ = s10.make_junk(tok, n, np.random.default_rng(JUNK_SEED)) if n else (None, None)
     return s10.mix(clean_d, junk, cols)
 
@@ -199,17 +204,18 @@ def main():
                 results[f"f{int(f*100)}_noop_s{seed}"] = {"junk_frac": f, "arm": "noop", "seed": seed,
                                                           "history": hist, "best": max(hist, key=lambda h: h["dev_acc"])}
                 json.dump(results, open(p, "w"), indent=2)
-            key_axes = f"f{int(f*100)}_axes_s{seed}"
+            pf = f if PROBE_F < 0 else PROBE_F
+            key_axes = f"f{int(f*100)}_axes_pf{int(pf*100)}_s{seed}"
             if key_axes not in results:
                 print(f"\n===== probe f={f} seed={seed} =====", flush=True)
-                axes, hist, base = probe_axes(f, seed, tok, clean_d, dev_d, cols, device)
-                np.savez(f"{OUT_DIR}/axes_f{int(f*100)}_s{seed}.npz",
+                axes, hist, base = probe_axes(pf, seed, tok, clean_d, dev_d, cols, device)
+                np.savez(f"{OUT_DIR}/axes_f{int(f*100)}_pf{int(pf*100)}_s{seed}.npz",
                          **{k.replace(".", "__"): v for k, v in axes.items()})
                 results[key_axes] = {"probe_history": hist,
                                      "probe_best": max(hist, key=lambda h: h["dev_acc"])}
                 json.dump(results, open(p, "w"), indent=2)
             else:
-                z = np.load(f"{OUT_DIR}/axes_f{int(f*100)}_s{seed}.npz")
+                z = np.load(f"{OUT_DIR}/axes_f{int(f*100)}_pf{int(pf*100)}_s{seed}.npz")
                 axes = {k.replace("__", "."): v for k, v in z.items()}
                 m0, _ = build_model()
                 nm = dict(m0.named_modules())
@@ -228,7 +234,7 @@ def main():
                       f"energy_removed/layer mean={np.mean(e):.4f}, "
                       f"谱位分布 mean={np.mean(rf):.2f} (0=最大σ, 1=最小σ)", flush=True)
                 _, hist, _ = train(mm, tr, dev_d, cols, device, seed)
-                results[tag] = {"junk_frac": f, "arm": arm, "seed": seed, "history": hist,
+                results[tag] = {"junk_frac": f, "arm": arm, "seed": seed, "probe_frac": pf, "history": hist,
                                 "best": max(hist, key=lambda h: h["dev_acc"]),
                                 "energy_removed_mean": float(np.mean(e)),
                                 "removed_rank_frac": [round(float(x), 3) for x in sorted(rf)]}
