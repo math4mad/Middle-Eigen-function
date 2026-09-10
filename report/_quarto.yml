@@ -8,6 +8,8 @@ website:
     left:
       - href: index.qmd
         text: Home
+      - file: notes/glossary.qmd
+        text: "术语页 Glossary"
       - file: notes/eigen-ablation.qmd
         text: "Ablation Note (BERT)"
       - file: notes/qwen-deep.qmd
