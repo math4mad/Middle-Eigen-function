@@ -4,43 +4,103 @@ project:
 
 website:
   title: "Middle Eigen Function"
+  description: "消融实验：权重矩阵的中间奇异值是否赋予模型泛化能力"
+  repo-url: https://github.com/math4mad/Middle-Eigen-function
+  repo-actions: [edit, issue]
+  page-navigation: true
+  search: true
+  back-to-top-navigation: true
   navbar:
+    background: primary
+    collapse-below: lg
     left:
       - href: index.qmd
         text: Home
       - file: notes/glossary.qmd
-        text: "术语页 Glossary"
-      - file: notes/eigen-ablation.qmd
-        text: "Ablation Note (BERT)"
-      - file: notes/qwen-deep.qmd
-        text: "Qwen Deep-Dive"
-      - file: notes/l6-robustness.qmd
-        text: "L6 Robustness (Stage9)"
-      - file: notes/online-svd.qmd
-        text: "Online SVD × Junk Injection (Stage10)"
-      - file: notes/atom-coordinates.qmd
-        text: "Coordinates: σ-order vs Function (S11/13/14)"
-      - file: notes/multi-model.qmd
-        text: "Multi-Model"
-      - file: notes/hybrid.qmd
-        text: "Hybrid Splice"
-      - file: notes/junk-dna.qmd
-        text: "Junk-DNA Expansion"
-      - file: notes/cross-size.qmd
-        text: "Cross-Size Pad"
-      - href: https://github.com/math4mad/Middle-Eigen-function
-        text: GitHub
-  repo-url: https://github.com/math4mad/Middle-Eigen-function
-  page-footer:
-    left: "消融实验 · 权重矩阵中间特征值与泛化能力"
-    right: "Built with Quarto"
+        text: "术语 Glossary"
+      - text: "实验阶段"
+        menu:
+          - file: notes/eigen-ablation.qmd
+            text: "① Stage 1 · BERT 四组消融"
+          - file: notes/multi-model.qmd
+            text: "① Stage 2 · 跨架构复验"
+          - file: notes/hybrid.qmd
+            text: "① Stage 3 · 谱拼接杂交"
+          - file: notes/junk-dna.qmd
+            text: "① Stage 6 · 垃圾 DNA 扩层"
+          - file: notes/cross-size.qmd
+            text: "① Stage 7 · 跨尺寸填充"
+          - file: notes/qwen-deep.qmd
+            text: "② Stage 5 · Qwen 深度验证"
+          - file: notes/l6-robustness.qmd
+            text: "② Stage 9 · L6 稳健性检验"
+          - file: notes/online-svd.qmd
+            text: "③ Stage 10 · 在线 SVD × 垃圾注入"
+          - file: notes/atom-coordinates.qmd
+            text: "④ Stage 11–14 · 坐标之争"
+          - href: https://github.com/math4mad/Middle-Eigen-function/tree/multi-model/stage
+            text: "全部任务书（stage/ 目录）"
+    right:
+      - icon: github
+        href: https://github.com/math4mad/Middle-Eigen-function
+        aria-label: GitHub
+
+  sidebar:
+    style: floating
+    collapse-after: 3
+    tools:
+      - icon: github
+        href: https://github.com/math4mad/Middle-Eigen-function
+        text: "源码 / 脚本"
+      - icon: list-checks
+        href: https://github.com/math4mad/Middle-Eigen-function/blob/multi-model/stage/NEXT.md
+        text: "下一步 Stage 15–17"
+    contents:
+      - text: "首页 · 动机与结论"
+        file: index.qmd
+      - text: "术语页 Glossary（先读这里）"
+        file: notes/glossary.qmd
+      - section: "① 起点 · 谱消融（Stage 1–3, 6–7）"
+        contents:
+          - file: notes/eigen-ablation.qmd
+            text: "Stage 1 · BERT 四组消融"
+          - file: notes/multi-model.qmd
+            text: "Stage 2 · 跨架构复验"
+          - file: notes/hybrid.qmd
+            text: "Stage 3 · 谱拼接杂交"
+          - file: notes/junk-dna.qmd
+            text: "Stage 6 · 垃圾 DNA 扩层"
+          - file: notes/cross-size.qmd
+            text: "Stage 7 · 跨尺寸填充"
+      - section: "② 定位与复验（Stage 5, 9）"
+        contents:
+          - file: notes/qwen-deep.qmd
+            text: "Stage 5 · Qwen 深度验证"
+          - file: notes/l6-robustness.qmd
+            text: "Stage 9 · L6 稳健性检验"
+      - section: "③ 污染、监测与坐标（Stage 10–14）"
+        contents:
+          - file: notes/online-svd.qmd
+            text: "Stage 10 · 在线 SVD × 垃圾注入"
+          - file: notes/atom-coordinates.qmd
+            text: "Stage 11–14 · 坐标之争（σ序 vs 功能序）"
+      - text: "全部阶段任务书"
+        href: https://github.com/math4mad/Middle-Eigen-function/tree/multi-model/stage
 
 format:
   html:
     theme: cosmo
     css: styles.css
     toc: true
+    toc-title: "本页目录"
     echo: true
+    code-fold: false
+    code-tools: true
+    fig-cap-location: bottom
+    page-layout: full
+    footer:
+      left: "消融实验 · 权重矩阵中间特征值与泛化能力"
+      right: "Built with Quarto · Stage 1–14"
 
 execute:
   enabled: true
