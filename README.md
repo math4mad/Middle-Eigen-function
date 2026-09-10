@@ -7,6 +7,9 @@
    - [13. 改动分解后的某些特征值，有可能、有意义吗？](https://math4mad.github.io/talk-with-agents/talking/mathematics/functional-spaces-to-singular-values.html)
    - [14. 大奇异值是泛化，最小奇异值是噪音，中间那一组是什么？](https://math4mad.github.io/talk-with-agents/talking/mathematics/functional-spaces-to-singular-values.html)
 
+   -  [编者注 · Editor’s note：把「中间那一组」画出来](https://math4mad.github.io/talk-with-agents/talking/mathematics/functional-spaces-to-singular-values.html)
+   -  补充更新（我大脑网络的自适应微调）：这里经过几天大脑的自适应， 可能有些概念又更新了。  SVD分解的特征值按常规操作，从大到小排序。 但是综合数据是混合部分。所以考虑大小来切割是欠妥的。 但是整套流程已经为我们随机抽取特征矩阵构建子学习空间铺垫了技术基础
+
    --- 
 
 # Middle Eigen Function — SVD 消融实验

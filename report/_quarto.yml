@@ -14,6 +14,10 @@ website:
         text: "Qwen Deep-Dive"
       - file: notes/l6-robustness.qmd
         text: "L6 Robustness (Stage9)"
+      - file: notes/online-svd.qmd
+        text: "Online SVD × Junk Injection (Stage10)"
+      - file: notes/atom-coordinates.qmd
+        text: "Coordinates: σ-order vs Function (S11/13/14)"
       - file: notes/multi-model.qmd
         text: "Multi-Model"
       - file: notes/hybrid.qmd

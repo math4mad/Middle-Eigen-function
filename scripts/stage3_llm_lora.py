@@ -98,7 +98,10 @@ def ablate_model(model, group):
             if not (name.endswith(AB_SUBSTR) and isinstance(mod, nn.Linear)):
                 continue
             li = int(name.split("layers.")[1].split(".")[0])
-            W = mod.weight.detach().float().numpy()
+            # NOTE: .numpy() on a CPU tensor ALIASES its memory — copy(), or the value of W
+            # silently becomes the *new* weights after mod.weight.copy_() below (this made the
+            # backfill_gap diagnostic report 0.0 for every run before 2026-09-10).
+            W = mod.weight.detach().float().numpy().copy()
             if lset is not None:
                 # layer-targeted: drop top-10% ONLY on layers in the set, keep others intact
                 if li not in lset:

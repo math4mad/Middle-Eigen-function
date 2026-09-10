@@ -33,7 +33,9 @@ date: last-modified
 1. [**Ablation Note (BERT)**](notes/eigen-ablation.qmd) —— 首轮完整实验记录：谱分布、四组训练曲线、准确率/泛化误差表、"入侵维度"分析。
 2. [**Qwen Deep-Dive**](notes/qwen-deep.qmd) —— 阶段五：Qwen2.5-0.5B+LoRA 深度验证（等能量对照/剂量曲线/分层定位），含对早间结论的修正。
 3. [**L6 Robustness (Stage9)**](notes/l6-robustness.qmd) —— 阶段九："切深层 top 谱 = 删有害记忆"的四重检验（多 seed/边界/1.5B/30% 数据）——方向成立、幅度从 +0.058 修正为 +0.02~+0.03。
-3. [**Multi-Model**](notes/multi-model.qmd) —— 阶段二：RoBERTa/ELECTRA/DistilBERT/Qwen2.5-0.5B(LoRA) 跨架构复验 + 等能量对照。
+3. [**Online SVD × Junk Injection**](notes/online-svd.qmd) —— 阶段十：把 ΔW 的谱（有效秩 / 入侵分位 / 旋转角）做成逐 step 在线监测，用 RTE test 伪标注做主动垃圾注入，测剂量-反应与报警延迟（Qwen2.5-0.5B）。
+4. [**Coordinates: σ-order vs Function**](notes/atom-coordinates.qmd) —— 阶段十一/十三/十四：随机子空间训练、**保谱 Shuffle-Rebuild**（只打乱方向↔大小的配对）、布洛卡式单方向损伤探针（Kendall τ）、以及注意力 rank-1 原子重参数化。核心诊断：σ 排序携带的信息量随矩阵类型变化（注意力 rel_perm≈1.0，MLP down_proj≈0.47）。
+5. [**Multi-Model**](notes/multi-model.qmd) —— 阶段二：RoBERTa/ELECTRA/DistilBERT/Qwen2.5-0.5B(LoRA) 跨架构复验 + 等能量对照。
 3. [**Hybrid Splice**](notes/hybrid.qmd) —— 阶段三：跨模型谱拼接杂交（top 段来自 X + middle 段来自 Y），检验中段谱的可移植性。
 4. [**Junk-DNA Expansion**](notes/junk-dna.qmd) —— 阶段六：门控层复制把 109M 扩到 195M，"补齐参数拼大模型"能否产生新能力？
 5. [**Cross-Size Pad**](notes/cross-size.qmd) —— 阶段七：零填充打通尺寸差异，做"跨公司跨尺寸"杂交 —— 含随机旋转/能量配平/纯噪声三重对照。
