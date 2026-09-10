@@ -92,7 +92,7 @@ rows = [{"指标": s["metric"], "ρ vs f": round(s["spearman_rho_vs_f"], 2), "p"
 ```{python}
 #| echo: false
 b = sens[0]
-print(f"最灵敏指标：**{b['metric']}**（ρ={b['spearman_rho_vs_f']:+.2f}, d={b['cohens_d']:+.1f}），"
+print(f"最灵敏指标：{b['metric']}（ρ={b['spearman_rho_vs_f']:+.2f}, d={b['cohens_d']:+.1f}），"
       f" f=0 → f={max(fs)} 时 {b['mean_f0']:.3f} → {b['mean_f_max']:.3f}")
 for k, v in list(SP["q2_alarms"].items()):
     if v["n_alarmed"]:

@@ -115,13 +115,13 @@ if b and gg:
     ctrl = BASE[f"lora_s{b[0]['seed']}"]
     print(f"读法（seed{b[0]['seed']}，控制组 {ctrl}）：带内置换 dev={b[0]['best']['dev_acc']:.3f}"
           f"（Δ{b[0]['best']['dev_acc']-ctrl:+.3f}），全局置换 dev={gg[0]['best']['dev_acc']:.3f}"
-          f"（Δ{gg[0]['best']['dev_acc']-ctrl:+.3f}）。两者**全部落在 ±0.030 噪声带内**。")
+          f"（Δ{gg[0]['best']['dev_acc']-ctrl:+.3f}）。两者全部落在 ±0.030 噪声带内。")
     print(f"干预强度（由 §1 的 rel_perm 直接给出）：down_proj 全局重排会改变矩阵 "
-          f"**≈{np.mean([a['rel_perm'] for m in ST.values() for p,a in m.items() if 'down_proj' in p]):.2f}** "
+          f"≈{np.mean([a['rel_perm'] for m in ST.values() for p,a in m.items() if 'down_proj' in p]):.2f} "
           f"的 Frobenius 质量（带内置换 ≈0.05）⇒ 这不是一个弱干预。")
 ```
 
-:::{.callout-warning title="本轮修掉的一个真 bug（诊断字段，不影响结论）"\}
+:::{.callout-warning title="本轮修掉的一个真 bug（只影响诊断字段，不影响结论）"}
 `Tensor.numpy()` 在 CPU 张量上**共享内存**：`W = mod.weight...numpy()` 之后再执行
 `mod.weight.copy_(W_new)`，`W` 的内容会**静默变成新权重** —— 于是所有历史结果里的
 `backfill_gap`（"这次消融把矩阵改了多少"）都被记成了 **0.0**（stage5 / stage9 / stage10 全部如此）。
@@ -163,7 +163,7 @@ if _rows:
     if T13 and T13A:
         print(f"τ 均值：MLP down_proj = {T13['mean_kendall_tau']:+.2f}，"
               f"注意力 q_proj = {T13A['mean_kendall_tau']:+.2f} ⇒ "
-              f"**两类矩阵上 σ 序都不预测功能序**（尽管 q_proj 的谱陡峭度 rel_perm≈1.0 远高于 down_proj≈0.47）")
+              f"两类矩阵上 σ 序都不预测功能序（尽管 q_proj 的谱陡峭度 rel_perm≈1.0 远高于 down_proj≈0.47）")
 else:
     print("(损伤探针尚未完成)")
 ```
@@ -227,7 +227,7 @@ if S14:
     if "ATOMfull" in a:
         print(f"容量维度：ATOMfull（全部 896 个原子，51k 参数 = 控制的 1/86）dev {a['ATOMfull']:.3f}"
               f"（Δ {a['ATOMfull']-0.556:+.3f}）⇒ 只要原子给够，'只重标已有方向'就能追平 LoRA；"
-              f"而 ATOM64（只给 top-64）掉到 {a.get('ATOM64',float('nan')):.3f} ⇒ 起作用的是**维度**，不是'挑对了大原子'")
+              f"而 ATOM64（只给 top-64）掉到 {a.get('ATOM64',float('nan')):.3f} ⇒ 起作用的是维度，不是'挑对了大原子'")
     if "ATOM64_L8" in a:
         print(f"预注册判据 3（要不要谱外新方向？）：ATOM64_L8 {a['ATOM64_L8']:.3f} vs ATOM64 {a.get('ATOM64',float('nan')):.3f}"
               f"（Δ {a['ATOM64_L8']-a.get('ATOM64',0):+.3f}）")
@@ -251,7 +251,7 @@ if S14B and "ATOMfull_s1" in S14B:
           f"，ATOMfull {S14B['ATOMfull_s1']['best']['dev_acc']:.3f}"
           f"（Δ {S14B['ATOMfull_s1']['best']['dev_acc']-S14B['lora_s1']['best']['dev_acc']:+.3f}，"
           f"参数 {S14B['ATOMfull_s1']['trainable']:,} = 控制的 1/{4400896//S14B['ATOMfull_s1']['trainable']}）")
-print("⇒ 三条一起读：**能不能训哪些方向 = 维度问题，不是'挑对大原子'的问题**；"
+print("⇒ 三条一起读：能不能训哪些方向 = 维度问题，不是'挑对大原子'的问题；"
       "把全部原子的系数都给出去（72k 标量、full-rank 但对角），单 seed 上已经追平/超过 4.4M 参数的 LoRA r=8"
       "（dev_loss 更差 1.84 vs 1.13，说明它靠'重标已有方向'硬拟合，泛化仍需复验）。")
 ```
