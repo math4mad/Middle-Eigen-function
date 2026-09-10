@@ -14,6 +14,14 @@
 
 # Middle Eigen Function — SVD 消融实验
 
+**作者 / Authors**
+- **math4mad** — 假设、协议设计、数据与硬件（M1 Pro 本机全部实验）、判据与生物类比
+- **pi coding agent（模型 qwen3.8-flash）** — 脚本实现、实验运行与断点续跑、配对统计
+  （t 检验 / bootstrap CI / Spearman ρ / Kendall τ / Cohen's d）、报告页与任务书撰写
+
+> 分工原则：人类负责"问什么、怎么算数"，AI 负责"怎么实现、怎么跑、怎么判"；
+> 报告中的每个数字都由 `scripts/` 从 `outputs/` 的原始 JSON 自动渲染，可复算。
+
 验证假设：*预训练模型权重矩阵的中间奇异值（"松散谱"）是泛化能力的主要来源。*
 
 - 任务书：[`AGETNTS.md`](AGETNTS.md)

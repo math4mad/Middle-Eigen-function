@@ -1,7 +1,17 @@
 ---
 title: "Middle Eigen Function"
 subtitle: "消融实验：权重矩阵的“中间特征值”是否赋予模型泛化能力？"
-author: "math4mad"
+author:
+  - name: "math4mad（假设 · 协议设计 · 数据与硬件）"
+    attributes:
+      role: [Conceptualization, Methodology, Resources, Supervision]
+  - name: "pi coding agent · 模型 qwen3.8-flash（实现 · 实验 · 统计 · 报告）"
+    attributes:
+      role: [Software, Validation, Formal analysis, Writing - original draft]
+author_notes: |
+  分工：人类提出假设、设计协议、提供数据与硬件；AI 代理（pi 编码代理）实现脚本、运行实验、
+  做配对统计与显著性检验、撰写报告页与任务书。所有数字均由 `scripts/` 里的脚本从
+  `outputs/` 的原始结果自动渲染，可复算。
 date: last-modified
 ---
 
@@ -50,6 +60,21 @@ date: last-modified
 真正决定小样本微调效果的是"**给学习过程多大自由度**"，而不是"切掉了第几大的那些"。
 名词不记得 → [术语页](notes/glossary.qmd)。
 :::
+
+## 贡献与可复现性 (Contributions & Reproducibility)
+
+:::{.callout-note title="作者分工"}
+- **math4mad** — 假设提出（"泛化能力住在松散谱里"）、实验协议设计（三步消融 / 等能量对照 / 剂量-反应）、
+  生物类比与判据、数据与硬件（M1 Pro 16 核 / 32GB，全部实验在本机跑）。
+- **pi coding agent（模型 qwen3.8-flash）** — 脚本实现、实验运行与断点续跑、配对统计
+  （t 检验 / bootstrap CI / Spearman / Kendall τ / Cohen's d）、报告页与任务书撰写、
+  以及主动否证自己前一轮结论的那几次（stage9 降级 +0.058、stage10 否证"垃圾住尾部"、
+  stage12 撤回删除式手术）。
+:::
+
+**可复算**：本报告每一张表里的每个数字都由 `scripts/` 下的脚本从 `outputs/` 的原始 JSON 渲染，
+页面本身是 Quarto + Jupyter 执行产物（`report/_freeze/` 存有执行缓存）。
+任务书与判据按阶段存放在仓库 `stage/`（含未跑的 `stage15–17.md`）。
 
 ## 先读这里
 

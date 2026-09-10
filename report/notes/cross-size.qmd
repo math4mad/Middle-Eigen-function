@@ -1,7 +1,17 @@
 ---
 title: "跨尺寸杂交：padding 能替代血缘吗？"
 subtitle: "host=BERT-base + PAD(mid of Electra-small 256维) · 含随机旋转/能量配平/纯噪声三重对照"
-author: "math4mad"
+author:
+  - name: "math4mad（假设 · 协议设计 · 数据与硬件）"
+    attributes:
+      role: [Conceptualization, Methodology, Resources, Supervision]
+  - name: "pi coding agent · 模型 qwen3.8-flash（实现 · 实验 · 统计 · 报告）"
+    attributes:
+      role: [Software, Validation, Formal analysis, Writing - original draft]
+author_notes: |
+  分工：人类提出假设、设计协议、提供数据与硬件；AI 代理（pi 编码代理）实现脚本、运行实验、
+  做配对统计与显著性检验、撰写报告页与任务书。所有数字均由 `scripts/` 里的脚本从
+  `outputs/` 的原始结果自动渲染，可复算。
 format:
   html:
     echo: true
