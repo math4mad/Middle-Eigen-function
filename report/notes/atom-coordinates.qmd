@@ -222,9 +222,19 @@ else:
     print("Stage 14 尚未运行 —— 命令：\n"
           "  MODEL_PATH=<qwen0.5b> SEEDS=1 OUT_DIR=outputs/stage14 \\\n"
           "    python scripts/stage14_rank1_atoms.py ATOM64 RAND64 ATOMfull ATOM64_L8")
-print("⚠️ 混淆项（诚实记录）：ATOM/RAND 只作用于**注意力** 96 个矩阵，而控制组 LoRA 作用于全部 168 个"
-      "（含 MLP）。stage9 已证明 MLP 深层是效应所在 ⇒ 这里的 −0.033 有一部分是'可训练范围变小'而非"
-      "'基选错'。已排入 TARGETS=both 的对照（outputs/stage14_both）与 MLP 版（outputs/stage14_mlp）。")
+for _R, _tag in ((S14, "注意力 q/k/v/o"), (S14M, "MLP gate/up/down")):
+    if _R and all(k in _R for k in ("ATOM64_s1", "RAND64_s1")):
+        _d = _R["ATOM64_s1"]["best"]["dev_acc"] - _R["RAND64_s1"]["best"]["dev_acc"]
+        print(f"判据 1（{_tag}）：ATOM64 {_R['ATOM64_s1']['best']['dev_acc']:.3f} vs "
+              f"RAND64 {_R['RAND64_s1']['best']['dev_acc']:.3f} ⇒ Δ = {_d:+.3f} "
+              f"{'（噪声带内 ⇒ 原子基无优势）' if abs(_d) < 0.030 else '（超出噪声带）'}，"
+              f"可学参数 {_R['ATOM64_s1']['trainable']:,}"
+              f"（= LoRA r=8 控制的 1/{4400896//_R['ATOM64_s1']['trainable']}）")
+print("⚠️ 混淆项（诚实记录）：ATOM/RAND 各自只作用于**一个矩阵家族**（注意力 96 个 或 MLP 72 个），"
+      "而控制组 LoRA 作用于全部 168 个投影 ⇒ 家族内的 −0.03 有一部分是'可训练范围变小'而非'基选错'。"
+      "判别办法：把两个家族合起来看 —— 注意力版最好 0.523、MLP 版最好 0.560、控制 0.556，"
+      "即**只动 MLP 的 6.4k 个原子系数已经追平全模型 LoRA**；TARGETS=both 的对照在 "
+      "outputs/stage14_both（跑完后自动进本表）。")
 ```
 
 # 6. 实验 E（Stage 12）：定向删除 vs 随机删除 vs 按谱位删除
