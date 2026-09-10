@@ -178,17 +178,53 @@ else:
 
 ```{python}
 #| echo: false
+S14M = ld(f"{ROOT}/outputs/stage14_mlp/results.json") or ld(f"{ROOT}/outputs/stage14_mlp/results_partial.json") or {}
+def tbl(R, tag):
+    rows = []
+    for k, v in sorted(R.items()):
+        if "best" not in v:
+            continue
+        rows.append({"组": k, "基": "SVD 原子" if k.startswith("ATOM") else ("随机正交基" if k.startswith("RAND") else "两端可学"),
+                     "m": v.get("m"), "可学参数": f"{v['trainable']:,}",
+                     "best dev": round(v["best"]["dev_acc"], 3),
+                     "Δ vs LoRA8 控制": round(v["best"]["dev_acc"] - 0.556, 3),
+                     "final train acc": round(v["final"]["train_acc"], 3),
+                     "final dev loss": round(v["final"]["dev_loss"], 2)})
+    if not rows:
+        print(f"({tag} 尚未完成)")
+        return None
+    return (GT(pd.DataFrame(rows)).tab_header(title=html(f"实验 D：{tag}（0.5B + RTE 10%，控制组 = LoRA r=8，4.4M 参数，dev 0.556）"),
+            subtitle=html("方向全部冻结、只学原子系数 δ（无量纲相对重标，lr=1e-2；分类头 2e-4）"))
+            .tab_options(table_font_size=12))
+_t1 = tbl(S14, "注意力 q/k/v/o（96 个矩阵）")
+_t2 = tbl(S14M, "MLP（gate/up/down，72 个矩阵 —— rel_perm 只有 0.47 的那一类）")
+if _t1 is not None:
+    display(_t1)
+if _t2 is not None:
+    display(_t2)
 if S14:
-    df14 = pd.DataFrame([{"组": k, "m": v.get("m"), "可学参数": f"{v['trainable']:,}",
-                          "best dev": round(v["best"]["dev_acc"], 3),
-                          "final train acc": round(v["final"]["train_acc"], 3)}
-                         for k, v in sorted(S14.items())])
-    (GT(df14).tab_header(title=html("Stage 14 首跑（若已完成）")).tab_options(table_font_size=12))
+    a = {k.split("_s")[0]: v["best"]["dev_acc"] for k, v in S14.items() if "best" in v}
+    if "ATOM64" in a and "RAND64" in a:
+        d = a["ATOM64"] - a["RAND64"]
+        print(f"预注册判据 1（ATOM64 vs RAND64，同容量不同基）：Δ = {d:+.3f}"
+              f"{' ⇒ |Δ| < 噪声带 0.030 ⇒ SVD 原子基并不比随机正交基好：σ 序在此不携带功能信息' if abs(d) < 0.030 else ' ⇒ 超出噪声带：基的选择确实重要'}")
+    if "ATOM64" in a:
+        print(f"预注册判据 2（ATOM64 ≈ lora8？）：ATOM64 {a['ATOM64']:.3f} vs 控制 0.556"
+              f"（Δ {a['ATOM64']-0.556:+.3f}，参数量 7.9k vs 4.4M = 1/550）")
+    if "ATOMfull" in a:
+        print(f"容量维度：ATOMfull（全部 896 个原子，51k 参数 = 控制的 1/86）dev {a['ATOMfull']:.3f}"
+              f"（Δ {a['ATOMfull']-0.556:+.3f}）⇒ 只要原子给够，'只重标已有方向'就能追平 LoRA；"
+              f"而 ATOM64（只给 top-64）掉到 {a.get('ATOM64',float('nan')):.3f} ⇒ 起作用的是**维度**，不是'挑对了大原子'")
+    if "ATOM64_L8" in a:
+        print(f"预注册判据 3（要不要谱外新方向？）：ATOM64_L8 {a['ATOM64_L8']:.3f} vs ATOM64 {a.get('ATOM64',float('nan')):.3f}"
+              f"（Δ {a['ATOM64_L8']-a.get('ATOM64',0):+.3f}）")
 else:
     print("Stage 14 尚未运行 —— 命令：\n"
           "  MODEL_PATH=<qwen0.5b> SEEDS=1 OUT_DIR=outputs/stage14 \\\n"
-          "    python scripts/stage14_rank1_atoms.py ATOM64 RAND64 ATOMfull ATOM64_L8\n"
-          "（MLP 版：TARGETS=mlp）")
+          "    python scripts/stage14_rank1_atoms.py ATOM64 RAND64 ATOMfull ATOM64_L8")
+print("⚠️ 混淆项（诚实记录）：ATOM/RAND 只作用于**注意力** 96 个矩阵，而控制组 LoRA 作用于全部 168 个"
+      "（含 MLP）。stage9 已证明 MLP 深层是效应所在 ⇒ 这里的 −0.033 有一部分是'可训练范围变小'而非"
+      "'基选错'。已排入 TARGETS=both 的对照（outputs/stage14_both）与 MLP 版（outputs/stage14_mlp）。")
 ```
 
 # 6. 结论
