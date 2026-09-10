@@ -1,3 +1,14 @@
+
+>  Original Thoughts is here :
+   - [泛函空间再向上抽象，然后呢？](https://math4mad.github.io/talk-with-agents/talking/mathematics/functional-spaces-to-singular-values.html)
+   - [4. 神经网络的参数矩阵，能像普通矩阵一样 SVD 压缩吗？](https://math4mad.github.io/talk-with-agents/talking/mathematics/functional-spaces-to-singular-values.html)
+   - [8. 不同公司的模型，rank-1 主奇异值矩阵相似吗？](https://math4mad.github.io/talk-with-agents/talking/mathematics/functional-spaces-to-singular-values.html)
+   - [11. 从低维到高维的「生成」，就是人类的学习机理](https://math4mad.github.io/talk-with-agents/talking/mathematics/functional-spaces-to-singular-values.html)
+   - [13. 改动分解后的某些特征值，有可能、有意义吗？](https://math4mad.github.io/talk-with-agents/talking/mathematics/functional-spaces-to-singular-values.html)
+   - [14. 大奇异值是泛化，最小奇异值是噪音，中间那一组是什么？](https://math4mad.github.io/talk-with-agents/talking/mathematics/functional-spaces-to-singular-values.html)
+
+   --- 
+
 # Middle Eigen Function — SVD 消融实验
 
 验证假设：*预训练模型权重矩阵的中间奇异值（"松散谱"）是泛化能力的主要来源。*

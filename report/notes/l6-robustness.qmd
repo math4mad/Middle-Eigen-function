@@ -1,0 +1,225 @@
+---
+title: "Stage 9 · L6 命题的稳健性检验"
+subtitle: "多 seed 复验 · 切除深度边界 · 0.5B→1.5B · 10%→30% 数据 —— 6 组配对统计"
+author: "math4mad"
+format:
+  html:
+    echo: true
+    warning: false
+jupyter: python3
+---
+
+```{python}
+#| include: false
+import json, os
+import numpy as np
+import pandas as pd
+from great_tables import GT, html
+
+ROOT = next(p for p in ["../..", "..", "."] if os.path.isdir(os.path.join(p, "outputs", "stage3_qwen")))
+DEV_N = 277
+NOISE = float(np.sqrt(0.5 * 0.5 / DEV_N))          # ≈ 0.030 单点二项噪声
+SP = json.load(open(f"{ROOT}/outputs/stage9/summary.json"))["checks"]
+
+def load(tag):
+    p = f"{ROOT}/outputs/{tag}/results.json"
+    return json.load(open(p)) if os.path.exists(p) else {}
+
+S = {t: load(t) for t in ["stage9_seed1", "stage9_seed2", "stage9_seed3", "stage9_boundary",
+                          "stage9_1p5b", "stage9_30pct", "stage3_qwen", "stage5_qwen_deep"]}
+REF42 = {"baseline": S["stage3_qwen"]["baseline"], "TAIL6": S["stage5_qwen_deep"]["L6"]} \
+        if "baseline" in S["stage3_qwen"] and "L6" in S["stage5_qwen_deep"] else {}
+
+def fin(r, g, k="dev_acc"):
+    return r[g]["final"][k] if g in r else np.nan
+def cutstat(r, g):
+    ab = r[g]["ablation"]; cut = [v for v in ab.values() if v.get("kept") != "intact"]
+    e = float(np.mean([v["energy_kept"] for v in cut])) if cut else 1.0
+    return f"{len(cut)}/{len(ab)} 层, E={e*100:.0f}%"
+```
+
+# 1. 被检验的命题
+
+[Qwen Deep-Dive](qwen-deep.qmd) 第 5 节留下 stage5 的"最干净一刀"：
+
+> Qwen2.5-0.5B + LoRA，只切**后 6 层** `mlp.down_proj` 的 top-10% 奇异值（L6/TAIL6）
+> → dev **0.585 全场最佳**、final dev loss **1.01 全场最低**；
+> 而切中 12 层（M12）掉到 0.505。→ 命题：**深层 top 谱 = 有害记忆，中层 top 谱 = 任务刚需。**
+
+它的证据基础是 **1 个 seed × RTE 单任务 × dev 277 条**。任务书
+[`stage/stage9.md`](https://github.com/math4mad/Middle-Eigen-function/blob/multi-model/stage/stage9.md)
+把它拆成 4 项可证伪检验，本页是结果（`bash scripts/run_stage9.sh` + `python scripts/summarize_stage9.py`，
+1 小时 49 分钟跑完 11 个组）。
+
+```{python}
+#| echo: false
+print(f"dev 集 n={DEV_N} ⇒ 单个准确率点的二项噪声 sd ≈ {NOISE:.3f}；"
+      f"判据阈值 +0.03 与噪声带同量级 ⇒ 必须用『配对 + 多设定』而不是单点比较。")
+```
+
+# 2. 检验①：多 seed 复验（同一 249 条子集，只变训练种子）
+
+```{python}
+#| echo: false
+rows, deltas = [], []
+for label, res in [("42（stage5 原样）", REF42), ("1", S["stage9_seed1"]),
+                   ("2", S["stage9_seed2"]), ("3", S["stage9_seed3"])]:
+    if not res: continue
+    b, t = res["baseline"]["best"]["dev_acc"], res["TAIL6"]["best"]["dev_acc"]
+    deltas.append(t - b)
+    rows.append({"seed": label, "baseline dev": round(b, 3), "TAIL6 dev": round(t, 3), "Δdev": round(t - b, 3),
+                 "baseline train−dev": round(fin(res, "baseline", "train_acc") - b, 3),
+                 "TAIL6 train−dev": round(fin(res, "TAIL6", "train_acc") - t, 3),
+                 "Δdev loss": round(fin(res, "TAIL6", "dev_loss") - fin(res, "baseline", "dev_loss"), 3),
+                 "切除": cutstat(res, "TAIL6")})
+(GT(pd.DataFrame(rows)).tab_header(
+    title=html("① TAIL6 − baseline（best dev），逐训练种子"),
+    subtitle=html("0.5B · RTE 10%（DATA_SEED=42 固定）· LoRA r=8 · 5 epochs"))
+   .tab_options(table_font_size=13))
+```
+
+```{python}
+#| echo: false
+st = SP["5_paired"]["strict_same_data_4seeds"]
+print(f"Δdev: {deltas[0]:+.3f} (s42) / {deltas[1]:+.3f} (s1) / {deltas[2]:+.3f} (s2) / {deltas[3]:+.3f} (s3)")
+print(f"均值 {st['delta_best']['mean']:+.3f}  sd {st['delta_best']['sd']:.3f}  t={st['delta_best']['t']:.2f}  "
+      f"p={st['delta_best']['p']:.2f}  95%CI [{st['delta_best']['ci95'][0]:+.3f}, {st['delta_best']['ci95'][1]:+.3f}]")
+print("判据『≥3/4 同号 且 均值>+0.03』→ 同号 ✅（3/4），均值 ❌（+0.021 < 0.030）")
+```
+
+**读法**：单看这一步，L6 效应**没有**在严格复验里达到判据——但注意 baseline 自己在 4 个 seed 上
+就从 0.527 跳到 0.588（sd ≈ 0.028，正好一个噪声带），说明 stage5 那个 0.585 里有相当一部分是
+"seed 42 运气好"。用更稳的统计量（末 3 epoch 平均 dev acc）均值升到 **+0.029**（p=0.13）。
+
+![](/figs/stage9_deltas.png)
+
+# 3. 检验②：切除深度边界（0.5B，seed 42）
+
+```{python}
+#| echo: false
+B, prof2 = S["stage9_boundary"], SP["2_boundary"]["profile"]
+base = SP["2_boundary"]["baseline"]
+rows = [{"组": "baseline", "切谁": "不切", "best dev": round(base, 3), "Δ": 0.0,
+         "train−dev": round(fin(B, "baseline", "train_acc") - base, 3), "dev loss": round(fin(B, "baseline", "dev_loss"), 2),
+         "切除": "—"}]
+for g in ["E6", "M12", "TAIL3", "TAIL6", "TAIL12"]:
+    src = B if g in B else {"E6": S["stage5_qwen_deep"]["E6"], "M12": S["stage5_qwen_deep"]["M12"]}
+    r = src[g]
+    rows.append({"组": g, "切谁": {"E6": "前6层", "M12": "中12层", "TAIL3": "后3层", "TAIL6": "后6层", "TAIL12": "后12层"}[g],
+                 "best dev": round(r["best"]["dev_acc"], 3), "Δ": round(r["best"]["dev_acc"] - base, 3),
+                 "train−dev": round(r["final"]["train_acc"] - r["best"]["dev_acc"], 3),
+                 "dev loss": round(r["final"]["dev_loss"], 2), "切除": cutstat(src, g)})
+(GT(pd.DataFrame(rows)).tab_header(title=html("② 深度定位 × 切除边界（同协议，SEED=42）"),
+    subtitle=html("E6/M12 沿用 stage5（同 seed 同数据）；TAIL3/6/12 本轮新跑；TAIL6 精确复现 stage5 的 0.585"))
+   .tab_options(table_font_size=13))
+```
+
+**成立**：TAIL3 **0.549** < TAIL6 **0.585** > TAIL12 **0.549** —— 倒 U 出现，且 TAIL6 逐位复现了
+stage5 的 0.585（同 seed 同数据 = 可复算）。三个 TAIL 组都 ≥ baseline，说明**只要不切穿中层，
+"切深层 top" 在 0.5B 上不是有害的**。真正显著负向的证据来自 1.5B 的 TAIL14（下节）。
+
+# 4. 检验③：规模 0.5B → 1.5B（28 层，TAIL7 = 后 25% 深度）
+
+```{python}
+#| echo: false
+M, c3 = S["stage9_1p5b"], SP["3_scale"]["profile"]
+df3 = pd.DataFrame([{"组": g, "深度占比": {"baseline": "—", "TAIL7": "后25%", "TAIL14": "后50%"}[g],
+                     "best dev": round(M[g]["best"]["dev_acc"], 3),
+                     "Δ vs baseline": round(M[g]["best"]["dev_acc"] - M["baseline"]["best"]["dev_acc"], 3),
+                     "final dev loss": round(fin(M, g, "dev_loss"), 2),
+                     "train−dev": round(fin(M, g, "train_acc") - M[g]["best"]["dev_acc"], 3),
+                     "切除": cutstat(M, g)} for g in ["baseline", "TAIL7", "TAIL14"]]).round(3)
+(GT(df3).tab_header(title=html("③ Qwen2.5-1.5B + LoRA（BATCH=8，其余同 0.5B 协议）"),
+    subtitle=html("1.5B 本身就强得多：baseline 0.661 vs 0.5B 0.527"))
+   .tab_options(table_font_size=13))
+```
+
+**半成立**：TAIL7 **+0.014**（< +0.03 ⇒ 判据 ❌），但 **TAIL14 −0.051** 显著掉分。
+即：**"切过头伤模型" 随规模保持并且更陡；"切一点点有增益" 的幅度随规模缩水。**
+另外 1.5B 的 TAIL7 final dev loss 1.23 vs baseline 1.91（同一 ep5）——切深层把 ep5 的
+崩坏（过拟合反跳）明显压住了，这是方向一致的旁证。
+
+# 5. 检验④：数据规模 10% → 30%（新子集 DATA_SEED=7）
+
+```{python}
+#| echo: false
+D, c4 = S["stage9_30pct"], SP["4_data_size"]
+df4 = pd.DataFrame([{"组": g, "best dev": round(D[g]["best"]["dev_acc"], 3),
+                     "final train acc": round(fin(D, g, "train_acc"), 3),
+                     "train−dev": round(fin(D, g, "train_acc") - D[g]["best"]["dev_acc"], 3),
+                     "final dev loss": round(fin(D, g, "dev_loss"), 2)} for g in ["baseline", "TAIL6"]]).round(3)
+(GT(df4).tab_header(title=html("⑤ 训练量 ×3 之后的 TAIL6 效应"),
+    subtitle=html(f"Δ = {c4['delta_30pct']:+.3f}（10% 同 seed 时 {c4['delta_10pct']:+.3f}）"))
+   .tab_options(table_font_size=13))
+```
+
+**预期被证伪**：预测"数据多了，深层骨架从记忆变回能力 ⇒ 优势缩小"，实测
+**+0.058 → +0.058，一点没缩**（且两组绝对分都大涨：baseline 0.527→0.661）。
+解读要改：深层 top 谱**不是**"待被数据激活的能力"，它在 3 倍数据下仍然是净负担；
+同时数据量是比谱手术强得多的主效应（+0.13），谱手术只是 +0.03 量级的二阶效应。
+
+# 6. 合并统计与判据落点
+
+```{python}
+#| echo: false
+pp = SP["5_paired"]["pooled_all_settings"]
+dfp = pd.DataFrame(SP["5_paired"]["per_pair"]).rename(
+    columns={"setting": "配对设定", "group": "组", "delta_best": "Δbest dev",
+             "delta_last3": "Δ末3epoch dev", "delta_devloss": "Δfinal dev loss"})
+(GT(dfp.round(3)).tab_header(
+    title=html("全部 6 组配对（同设定内 TAIL−baseline）"),
+    subtitle=html(f"合并：Δbest = {pp['delta_best']['mean']:+.3f} "
+                  f"[95%CI {pp['delta_best']['ci95'][0]:+.3f},{pp['delta_best']['ci95'][1]:+.3f}], p={pp['delta_best']['p']:.2f}；"
+                  f"Δ末3 = {pp['delta_last3']['mean']:+.3f}, p={pp['delta_last3']['p']:.2f}；"
+                  f"正向 {pp['delta_best']['positive']}/{pp['delta_best']['n']}"))
+   .tab_options(table_font_size=13))
+```
+
+```{python}
+#| echo: false
+v = SP["verdict"]
+pd.DataFrame([
+  {"检验": "① 多 seed 可复现", "判据": "≥3/4 同号 且 均值 > +0.03",
+   "实测": f"3/4 同号；均值 {v['strict_mean']:+.3f}（p={SP['5_paired']['strict_same_data_4seeds']['delta_best']['p']:.2f}）", "结论": "半通过"},
+  {"检验": "② 深度边界倒 U", "判据": "TAIL3 ≈ TAIL6 > TAIL12",
+   "实测": "0.549 < 0.585 > 0.549", "结论": "✅ 通过"},
+  {"检验": "③ 规模保持 (1.5B)", "判据": "TAIL7 − baseline > +0.03",
+   "实测": f"+0.014（TAIL14 −0.051 ⇒ 边界随规模保持）", "结论": "❌ 幅度不通过 / ✅ 方向通过"},
+  {"检验": "④ 优势随数据缩小", "判据": "Δ30% < Δ10%",
+   "实测": f"+0.058 → +0.058（未缩小）", "结论": "❌ 预期被证伪"},
+]).pipe(lambda d: GT(d).tab_header(title=html("Stage9 判据表（stage/stage9.md 三档落点）")).tab_options(table_font_size=13))
+```
+
+:::{.callout-important title="落点：介于第 1 档与第 3 档之间 —— 命题改写，不撤回、也不升级"}
+1. **方向稳，幅度被高估**（核心修正）：6 组配对里 5 组为正，合并 Δbest = **+0.026**
+   （95% CI [+0.005, +0.046]，p=0.08），Δ末3epoch = **+0.031**（p=0.03）；
+   但 stage5 头条的 **+0.058 是 seed 42 专属**，严格同数据 4 seed 复验只有 +0.021（p=0.28）。
+   → 命题里的"全场最佳/全场最低"必须降级为"平均 +0.03 ≈ 一个噪声带"。
+2. **"切过头有害"是本轮最稳的一条**：0.5B TAIL12 掉回 0.549、1.5B TAIL14 掉到 0.610
+   （−0.051），M12 掉到 0.505 —— 中层骨架刚需 ✅，倒 U ✅。
+3. **final dev loss 判据不稳**：6 组里只有 3 组因切深层而 dev loss 更低
+   （1.5B −0.69 很大，30% 数据 +0.10 反向）⇒ stage5 的"最低 dev loss"同样是 seed 特例。
+4. **规模不是放大器**：1.5B 上效应不放大反而变小 ⇒ 不是"小模型才有垃圾骨架"，
+   而是"任务越简单/模型越强，可腾出的空间越小"。
+5. 按 stage9.md 的三档：落 **"多 seed 部分过、规模/数据不完全过"** ⇒
+   **限定为『0.5B 级 + 小数据 + 深层 top-10% 轻切除』的现象，量级 +0.02~+0.03，不可引用为 +0.058。**
+:::
+
+# 7. 对 Stage 10 的影响
+
+Stage 10（在线 SVD 监测 + 垃圾注入主动实验）依赖的正是"L6 效应"这个信号源。本轮结论带来两条硬约束：
+
+- **信噪比**：要检测的效应量 ~+0.03，而 dev 单点噪声 ±0.03 ⇒ 主动注入实验必须
+  自带**多 seed + 配对 Δ**（或直接监测谱指标而非下游准确率），否则注入比例的
+  剂量-反应曲线根本拉不出来。
+- **指标选择**：dev loss / 子空间旋转角这类连续量比 277 条上的准确率更可分辨；
+  这也正支持 stage10 用 **ΔW 的 SVD 谱（有效秩、尾部能量、主轴夹角）**作为在线信号。
+
+## 复现
+
+```bash
+bash scripts/run_stage9.sh          # 4 阶段顺序跑，results.json 存在即跳过（可断点续跑）
+python scripts/summarize_stage9.py  # → outputs/stage9/{summary.json,stage9_table.md,deltas.png,curves.png}
+```
+
+![](/figs/stage9_curves.png)

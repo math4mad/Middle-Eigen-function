@@ -10,3 +10,5 @@ __pycache__/
 *.ipynb_checkpoints
 Jargon.md
 log/
+README.html
+README_files/

@@ -12,6 +12,8 @@ website:
         text: "Ablation Note (BERT)"
       - file: notes/qwen-deep.qmd
         text: "Qwen Deep-Dive"
+      - file: notes/l6-robustness.qmd
+        text: "L6 Robustness (Stage9)"
       - file: notes/multi-model.qmd
         text: "Multi-Model"
       - file: notes/hybrid.qmd
