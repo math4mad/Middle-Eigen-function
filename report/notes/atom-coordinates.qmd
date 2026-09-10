@@ -227,7 +227,46 @@ print("⚠️ 混淆项（诚实记录）：ATOM/RAND 只作用于**注意力** 
       "'基选错'。已排入 TARGETS=both 的对照（outputs/stage14_both）与 MLP 版（outputs/stage14_mlp）。")
 ```
 
-# 6. 结论
+# 6. 实验 E（Stage 12）：定向删除 vs 随机删除 vs 按谱位删除
+
+前三节都是"训练侧"的证据。这一节是**减法侧**的决定性一刀：先用污染训练流测出
+$\Delta W$ 的 top-K 右奇异方向（**污染指纹**，K=2 对应 stage10 实测 r_eff≈2.3），
+再回到原始权重，在 W₀ 的 SVD 基里删掉 **同样条数**的原子，三组只差"删哪几个"：
+
+| 组 | 删哪些原子 | 坐标 |
+|---|---|---|
+| `TGT` | 与污染指纹最对齐的 K 个原子 | **功能序**（探针定位） |
+| `RAND` | 与 TGT **同分位带**的随机 K 个 | 无坐标（取向随机、能量分布可比） |
+| `SPEC` | 6–10 分位里 σ 最大的 K 个 | **大小序**（我们此前一直在用的那种切法） |
+| `noop` | 不删 | 参照 |
+
+```{python}
+#| echo: false
+S12 = ld(f"{ROOT}/outputs/stage12/summary.json")
+if S12 and S12.get("rows"):
+    df12 = pd.DataFrame(S12["rows"])
+    df12 = df12[["f", "arm", "dev", "delta_vs_noop", "train", "dev_loss", "E_removed", "mean_σrank_of_removed"]]
+    df12.columns = ["f", "组", "best dev", "Δ vs noop", "train acc", "dev loss",
+                    "每层删掉的能量", "原子平均谱位(0=最大σ)"]
+    for c in ["best dev", "Δ vs noop", "train acc", "dev loss"]:
+        df12[c] = df12[c].astype(float).round(3)
+    df12["每层删掉的能量"] = df12["每层删掉的能量"].astype(float).map(lambda x: f"{x*100:.2f}%")
+    df12["原子平均谱位(0=最大σ)"] = df12["原子平均谱位(0=最大σ)"].astype(float).round(2)
+    (GT(df12).tab_header(title=html("等条数删除的三套坐标（同一污染训练流、同 seed 配对）"),
+            subtitle=html("判据：TGT − RAND > +0.03 ⇒ 污染可定位但坐标不是 σ 序；"
+                          "TGT ≈ RAND ≈ SPEC ⇒ 切割=能量/容量效应；三者皆 ≤ 0 ⇒ 撤回删除式手术"))
+       .tab_options(table_font_size=12))
+    v = S12["verdict"]
+    for k, val in v.items():
+        print(k, json.dumps(val, ensure_ascii=False))
+else:
+    print("(Stage 12 尚未完成 —— 命令：JUNK_FRACS=0.5 ARMS=noop,tgt,rand,spec K=2 SEEDS=1 "
+          "python scripts/stage12_targeted_deletion.py，汇总 python scripts/summarize_stage12.py)")
+```
+
+![](/figs/stage12_arms.png)
+
+# 7. 结论
 
 :::{.callout-important title="坐标之争的当前判决（本页数字随运行自动更新）"}
 1. **σ 序携带多少信息，是"矩阵类型"的函数**：注意力 rel_perm 0.82–1.04（top-10% σ 占 54–63% 能量），
