@@ -192,6 +192,7 @@ else:
 ```{python}
 #| echo: false
 S14M = ld(f"{ROOT}/outputs/stage14_mlp/results.json") or ld(f"{ROOT}/outputs/stage14_mlp/results_partial.json") or {}
+S14B = ld(f"{ROOT}/outputs/stage14_both/results.json") or ld(f"{ROOT}/outputs/stage14_both/results_partial.json") or {}
 def tbl(R, tag):
     rows = []
     for k, v in sorted(R.items()):
@@ -209,12 +210,11 @@ def tbl(R, tag):
     return (GT(pd.DataFrame(rows)).tab_header(title=html(f"实验 D：{tag}（0.5B + RTE 10%，控制组 = LoRA r=8，4.4M 参数，dev 0.556）"),
             subtitle=html("方向全部冻结、只学原子系数 δ（无量纲相对重标，lr=1e-2；分类头 2e-4）"))
             .tab_options(table_font_size=12))
-_t1 = tbl(S14, "注意力 q/k/v/o（96 个矩阵）")
-_t2 = tbl(S14M, "MLP（gate/up/down，72 个矩阵 —— rel_perm 只有 0.47 的那一类）")
-if _t1 is not None:
-    display(_t1)
-if _t2 is not None:
-    display(_t2)
+for _R, _tag in ((S14B, "注意力 + MLP 一起（120 个矩阵，含自带 LoRA 控制组）"),
+                 (S14, "只注意力（96 个矩阵）"), (S14M, "只 MLP（72 个矩阵，rel_perm 0.47 那一类）")):
+    _t = tbl(_R, _tag)
+    if _t is not None:
+        display(_t)
 if S14:
     a = {k.split("_s")[0]: v["best"]["dev_acc"] for k, v in S14.items() if "best" in v}
     if "ATOM64" in a and "RAND64" in a:
@@ -243,11 +243,17 @@ for _R, _tag in ((S14, "注意力 q/k/v/o"), (S14M, "MLP gate/up/down")):
               f"{'（噪声带内 ⇒ 原子基无优势）' if abs(_d) < 0.030 else '（超出噪声带）'}，"
               f"可学参数 {_R['ATOM64_s1']['trainable']:,}"
               f"（= LoRA r=8 控制的 1/{4400896//_R['ATOM64_s1']['trainable']}）")
-print("⚠️ 混淆项（诚实记录）：ATOM/RAND 各自只作用于**一个矩阵家族**（注意力 96 个 或 MLP 72 个），"
-      "而控制组 LoRA 作用于全部 168 个投影 ⇒ 家族内的 −0.03 有一部分是'可训练范围变小'而非'基选错'。"
-      "判别办法：把两个家族合起来看 —— 注意力版最好 0.523、MLP 版最好 0.560、控制 0.556，"
-      "即**只动 MLP 的 6.4k 个原子系数已经追平全模型 LoRA**；TARGETS=both 的对照在 "
-      "outputs/stage14_both（跑完后自动进本表）。")
+if S14B and "ATOMfull_s1" in S14B:
+    print("混淆项已排除：TARGETS=both（注意力+MLP 共 120 个矩阵，自带 lora 控制组）—— "
+          f"lora {S14B['lora_s1']['best']['dev_acc']:.3f}（复现 stage9/10/11 的 0.556）"
+          f"，ATOM64 {S14B['ATOM64_s1']['best']['dev_acc']:.3f} vs RAND64 {S14B['RAND64_s1']['best']['dev_acc']:.3f}"
+          f"（Δ {S14B['ATOM64_s1']['best']['dev_acc']-S14B['RAND64_s1']['best']['dev_acc']:+.3f}，噪声带内）"
+          f"，ATOMfull {S14B['ATOMfull_s1']['best']['dev_acc']:.3f}"
+          f"（Δ {S14B['ATOMfull_s1']['best']['dev_acc']-S14B['lora_s1']['best']['dev_acc']:+.3f}，"
+          f"参数 {S14B['ATOMfull_s1']['trainable']:,} = 控制的 1/{4400896//S14B['ATOMfull_s1']['trainable']}）")
+print("⇒ 三条一起读：**能不能训哪些方向 = 维度问题，不是'挑对大原子'的问题**；"
+      "把全部原子的系数都给出去（72k 标量、full-rank 但对角），单 seed 上已经追平/超过 4.4M 参数的 LoRA r=8"
+      "（dev_loss 更差 1.84 vs 1.13，说明它靠'重标已有方向'硬拟合，泛化仍需复验）。")
 ```
 
 # 6. 实验 E（Stage 12）：定向删除 vs 随机删除 vs 按谱位删除
