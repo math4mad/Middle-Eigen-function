@@ -12,3 +12,7 @@ Jargon.md
 log/
 README.html
 README_files/
+
+# stage18 local binaries: reproducible from seed 13 + scripts/stage18_kairos_mini.py; JSONs+log cross via chora artifacts mirror
+outputs/*/ckpt_k*.pt
+outputs/*/eval_*.pt
