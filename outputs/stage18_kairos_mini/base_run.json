@@ -1,0 +1,132 @@
+{
+ "cfg": {
+  "d": 192,
+  "layers": 4,
+  "nh": 6,
+  "nkv": 2,
+  "inter": 512,
+  "ctx": 256
+ },
+ "steps": 2000,
+ "batch": 16,
+ "ctx": 256,
+ "seed": 13,
+ "curve": [
+  {
+   "step": 100,
+   "loss": 2.1507415771484375,
+   "secs": 13.2
+  },
+  {
+   "step": 200,
+   "loss": 1.7806692123413086,
+   "secs": 26.2
+  },
+  {
+   "step": 300,
+   "loss": 1.548405647277832,
+   "secs": 39.2
+  },
+  {
+   "step": 400,
+   "loss": 1.393513560295105,
+   "secs": 52.2
+  },
+  {
+   "step": 500,
+   "loss": 1.4285213947296143,
+   "secs": 65.2
+  },
+  {
+   "step": 600,
+   "loss": 1.32608962059021,
+   "secs": 78.2
+  },
+  {
+   "step": 700,
+   "loss": 1.2373182773590088,
+   "secs": 91.2
+  },
+  {
+   "step": 800,
+   "loss": 1.1769256591796875,
+   "secs": 104.2
+  },
+  {
+   "step": 900,
+   "loss": 1.2490614652633667,
+   "secs": 117.2
+  },
+  {
+   "step": 1000,
+   "loss": 1.19440758228302,
+   "secs": 130.2
+  },
+  {
+   "step": 1100,
+   "loss": 1.2434470653533936,
+   "secs": 143.2
+  },
+  {
+   "step": 1200,
+   "loss": 1.1205729246139526,
+   "secs": 156.2
+  },
+  {
+   "step": 1300,
+   "loss": 1.0815116167068481,
+   "secs": 169.2
+  },
+  {
+   "step": 1400,
+   "loss": 1.071794033050537,
+   "secs": 182.3
+  },
+  {
+   "step": 1500,
+   "loss": 1.1398991346359253,
+   "secs": 195.3
+  },
+  {
+   "step": 1600,
+   "loss": 1.0755741596221924,
+   "secs": 208.3
+  },
+  {
+   "step": 1700,
+   "loss": 1.0604948997497559,
+   "secs": 221.2
+  },
+  {
+   "step": 1800,
+   "loss": 1.1369951963424683,
+   "secs": 234.2
+  },
+  {
+   "step": 1900,
+   "loss": 1.092604398727417,
+   "secs": 247.2
+  },
+  {
+   "step": 2000,
+   "loss": 1.0339288711547852,
+   "secs": 260.2
+  }
+ ],
+ "meta": {
+  "kind": "tinystories | B=held-out tail | P=case-toggled-B",
+  "shaA": "f0afe3164daa5fa0bdbbf15a1040f371740a4dc4f1e917d673d587decddb361f",
+  "shaB": "e19676fd84cf045efe0665b92a93c0b637aabc3fea95fae1689521c05aad0c39",
+  "shaP": "3cead46cd3d76ebeecebbd1675b6f14b0631299c926b712b4e6c29ac488c3e26",
+  "bytesA": 380000000,
+  "bytesB": 16000000
+ },
+ "ladder": {
+  "0": "outputs/stage18_kairos_mini/ckpt_k0.pt",
+  "25": "outputs/stage18_kairos_mini/ckpt_k25.pt",
+  "50": "outputs/stage18_kairos_mini/ckpt_k50.pt",
+  "75": "outputs/stage18_kairos_mini/ckpt_k75.pt",
+  "100": "outputs/stage18_kairos_mini/ckpt_k100.pt"
+ },
+ "measured_secs": 260.2
+}
