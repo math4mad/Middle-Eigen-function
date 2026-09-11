@@ -23,7 +23,7 @@ Usage (from the MEF repo root, .venv/bin/python):
   .venv/bin/python scripts/stage18_kairos_mini.py --mode sweep --adapter-steps 300
   (smoke: add --steps 20 --adapter-steps 10 --batch 4)
 """
-import argparse, json, math, os, time, hashlib, urllib.request
+import argparse, json, math, os, time, hashlib, urllib.request, socket, platform
 from pathlib import Path
 import numpy as np
 import torch
@@ -247,6 +247,8 @@ def mode_pretrain(a):
     torch.save(model2.state_dict(), ladder[100])
     (OUT / "base_run.json").write_text(json.dumps(
         {"cfg": cfg, "steps": a.steps, "batch": a.batch, "ctx": a.ctx, "seed": SEED,
+         "run_on": {"host": socket.gethostname(), "machine": os.environ.get("CHORA_MACHINE", platform.machine()),
+                    "torch": torch.__version__, "py": platform.python_version()},
          "curve": curve2, "meta": meta, "ladder": {str(k): str(v) for k, v in ladder.items()},
          "measured_secs": round(time.time()-t0, 1)}, indent=1))
     (OUT / "eval_A.pt").parent.mkdir(exist_ok=True)
