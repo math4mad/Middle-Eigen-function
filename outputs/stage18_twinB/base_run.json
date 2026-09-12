@@ -1,0 +1,138 @@
+{
+ "cfg": {
+  "d": 192,
+  "layers": 4,
+  "nh": 6,
+  "nkv": 2,
+  "inter": 512,
+  "ctx": 256
+ },
+ "steps": 2000,
+ "batch": 16,
+ "ctx": 256,
+ "seed": 13,
+ "run_on": {
+  "host": "lunardeMacBook-Pro.local",
+  "machine": "m1-16g",
+  "torch": "2.14.0",
+  "py": "3.11.16"
+ },
+ "curve": [
+  {
+   "step": 100,
+   "loss": 2.139946460723877,
+   "secs": 26.5
+  },
+  {
+   "step": 200,
+   "loss": 1.802675724029541,
+   "secs": 50.6
+  },
+  {
+   "step": 300,
+   "loss": 1.5267059803009033,
+   "secs": 75.0
+  },
+  {
+   "step": 400,
+   "loss": 1.4098254442214966,
+   "secs": 99.2
+  },
+  {
+   "step": 500,
+   "loss": 1.4225012063980103,
+   "secs": 123.7
+  },
+  {
+   "step": 600,
+   "loss": 1.2868006229400635,
+   "secs": 148.0
+  },
+  {
+   "step": 700,
+   "loss": 1.2130255699157715,
+   "secs": 172.4
+  },
+  {
+   "step": 800,
+   "loss": 1.1857807636260986,
+   "secs": 197.3
+  },
+  {
+   "step": 900,
+   "loss": 1.2160003185272217,
+   "secs": 221.5
+  },
+  {
+   "step": 1000,
+   "loss": 1.2086327075958252,
+   "secs": 245.6
+  },
+  {
+   "step": 1100,
+   "loss": 1.2505484819412231,
+   "secs": 270.9
+  },
+  {
+   "step": 1200,
+   "loss": 1.1246974468231201,
+   "secs": 295.5
+  },
+  {
+   "step": 1300,
+   "loss": 1.0766026973724365,
+   "secs": 320.1
+  },
+  {
+   "step": 1400,
+   "loss": 1.1081643104553223,
+   "secs": 344.6
+  },
+  {
+   "step": 1500,
+   "loss": 1.1405689716339111,
+   "secs": 369.3
+  },
+  {
+   "step": 1600,
+   "loss": 1.066097378730774,
+   "secs": 393.8
+  },
+  {
+   "step": 1700,
+   "loss": 1.0453394651412964,
+   "secs": 418.1
+  },
+  {
+   "step": 1800,
+   "loss": 1.1307481527328491,
+   "secs": 442.7
+  },
+  {
+   "step": 1900,
+   "loss": 1.0827600955963135,
+   "secs": 472.6
+  },
+  {
+   "step": 2000,
+   "loss": 1.037381887435913,
+   "secs": 509.6
+  }
+ ],
+ "meta": {
+  "kind": "tinystories | B=held-out tail | P=case-toggled-B",
+  "shaA": "f0afe3164daa5fa0bdbbf15a1040f371740a4dc4f1e917d673d587decddb361f",
+  "shaB": "e19676fd84cf045efe0665b92a93c0b637aabc3fea95fae1689521c05aad0c39",
+  "shaP": "3cead46cd3d76ebeecebbd1675b6f14b0631299c926b712b4e6c29ac488c3e26",
+  "bytesA": 380000000,
+  "bytesB": 16000000
+ },
+ "ladder": {
+  "0": "outputs/stage18_twinB/ckpt_k0.pt",
+  "25": "outputs/stage18_twinB/ckpt_k25.pt",
+  "50": "outputs/stage18_twinB/ckpt_k50.pt",
+  "75": "outputs/stage18_twinB/ckpt_k75.pt",
+  "100": "outputs/stage18_twinB/ckpt_k100.pt"
+ },
+ "measured_secs": 509.7
+}
