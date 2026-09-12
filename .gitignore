@@ -20,3 +20,6 @@ outputs/*/eval_*.pt
 # chora/bin/sync.sh shared-store links (not bench content; see Sarcos fb37e04 for the same fix)
 /data
 /models
+# stage19 E3: verdicts are mirrored to chora artifacts (hashed); checkpoints reconstructible from seed
+outputs/stage19_kairos_e3/*/base_k100.pt
+outputs/stage19_kairos_e3/*/eval_*.pt
