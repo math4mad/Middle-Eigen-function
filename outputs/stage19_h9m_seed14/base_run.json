@@ -1,0 +1,138 @@
+{
+ "cfg": {
+  "d": 192,
+  "layers": 4,
+  "nh": 6,
+  "nkv": 2,
+  "inter": 512,
+  "ctx": 256
+ },
+ "steps": 2000,
+ "batch": 16,
+ "ctx": 256,
+ "seed": 14,
+ "run_on": {
+  "host": "MacBook-Pro.local",
+  "machine": "m1pro-32g",
+  "torch": "2.14.0",
+  "py": "3.14.7"
+ },
+ "curve": [
+  {
+   "step": 100,
+   "loss": 2.100299835205078,
+   "secs": 12.1
+  },
+  {
+   "step": 200,
+   "loss": 1.7641950845718384,
+   "secs": 24.0
+  },
+  {
+   "step": 300,
+   "loss": 1.6369776725769043,
+   "secs": 36.0
+  },
+  {
+   "step": 400,
+   "loss": 1.4148929119110107,
+   "secs": 48.0
+  },
+  {
+   "step": 500,
+   "loss": 1.39503812789917,
+   "secs": 60.1
+  },
+  {
+   "step": 600,
+   "loss": 1.3828620910644531,
+   "secs": 71.9
+  },
+  {
+   "step": 700,
+   "loss": 1.31179678440094,
+   "secs": 84.0
+  },
+  {
+   "step": 800,
+   "loss": 1.2448211908340454,
+   "secs": 96.0
+  },
+  {
+   "step": 900,
+   "loss": 1.1844078302383423,
+   "secs": 107.9
+  },
+  {
+   "step": 1000,
+   "loss": 1.1864625215530396,
+   "secs": 119.8
+  },
+  {
+   "step": 1100,
+   "loss": 1.096158504486084,
+   "secs": 131.7
+  },
+  {
+   "step": 1200,
+   "loss": 1.1204861402511597,
+   "secs": 143.6
+  },
+  {
+   "step": 1300,
+   "loss": 1.0885118246078491,
+   "secs": 155.6
+  },
+  {
+   "step": 1400,
+   "loss": 1.1240582466125488,
+   "secs": 167.5
+  },
+  {
+   "step": 1500,
+   "loss": 1.0704128742218018,
+   "secs": 179.4
+  },
+  {
+   "step": 1600,
+   "loss": 1.0553793907165527,
+   "secs": 191.4
+  },
+  {
+   "step": 1700,
+   "loss": 1.1099075078964233,
+   "secs": 203.3
+  },
+  {
+   "step": 1800,
+   "loss": 1.053556203842163,
+   "secs": 215.3
+  },
+  {
+   "step": 1900,
+   "loss": 0.9980102777481079,
+   "secs": 227.3
+  },
+  {
+   "step": 2000,
+   "loss": 1.0694491863250732,
+   "secs": 239.3
+  }
+ ],
+ "meta": {
+  "kind": "tinystories | B=held-out tail | P=case-toggled-B",
+  "shaA": "f0afe3164daa5fa0bdbbf15a1040f371740a4dc4f1e917d673d587decddb361f",
+  "shaB": "e19676fd84cf045efe0665b92a93c0b637aabc3fea95fae1689521c05aad0c39",
+  "shaP": "3cead46cd3d76ebeecebbd1675b6f14b0631299c926b712b4e6c29ac488c3e26",
+  "bytesA": 380000000,
+  "bytesB": 16000000
+ },
+ "ladder": {
+  "0": "/Users/mac/Programming/code-2026/Middle-Eigen-function/outputs/stage19_h9m_seed14/ckpt_k0.pt",
+  "25": "/Users/mac/Programming/code-2026/Middle-Eigen-function/outputs/stage19_h9m_seed14/ckpt_k25.pt",
+  "50": "/Users/mac/Programming/code-2026/Middle-Eigen-function/outputs/stage19_h9m_seed14/ckpt_k50.pt",
+  "75": "/Users/mac/Programming/code-2026/Middle-Eigen-function/outputs/stage19_h9m_seed14/ckpt_k75.pt",
+  "100": "/Users/mac/Programming/code-2026/Middle-Eigen-function/outputs/stage19_h9m_seed14/ckpt_k100.pt"
+ },
+ "measured_secs": 239.4
+}
