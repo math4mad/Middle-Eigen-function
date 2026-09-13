@@ -287,14 +287,34 @@ def mode_sweep(a):
                             "final_P": curve[-1]["Pval"],
                             "eff_rank_mean": round(float(np.mean(ers)), 2), "curve": curve})
             print(f"  k={k}% r={r}: B {results[-1]['final_B']:.3f} A {results[-1]['final_A']:.3f} P {results[-1]['final_P']:.3f} effrank {results[-1]['eff_rank_mean']}")
+    # --- control row, added with H9-M's registration (MEF/docs/PREREG_H9M.md §2 amendment 1): ---
+    # --- 600 more steps at each rung with NO adapter. Without it, G(k,r) cannot be told apart ---
+    # --- from "the loss is already low here, so any 600 steps buy less" — the ladder moves the ---
+    # --- floor 5x, so a decay in G is not yet a statement about plasticity. ---
+    controls = []
+    if os.environ.get("CONTROLS") == "1":
+        for k in (0, 25, 50, 75, 100):
+            torch.manual_seed(SEED)
+            m = build(cfg); m.load_state_dict(torch.load(OUT / f"ckpt_k{k}.pt", weights_only=True))
+            c = fit(m, stream(B, a.batch, cfg["ctx"], np.random.default_rng(SEED + 7)),
+                    a.adapter_steps, 5e-4, {"Bval": evB, "Aval": evA, "Pval": evP},
+                    every=max(1, a.adapter_steps // 6), tag=f"k{k} r0-control")
+            controls.append({"k": k, "r": 0, "trainable": nparams(m), "schedule": "a-fixed-budget",
+                             "final_B": c[-1]["Bval"], "final_A": c[-1]["Aval"], "final_P": c[-1]["Pval"],
+                             "eff_rank_mean": None, "curve": c})
+            print(f"  CONTROL k={k}% r=0 (no adapter): B {controls[-1]['final_B']:.3f}")
+
     # frozen-base reference at each ladder point (the floor; adaptation must beat THIS)
     floors = {}
     for k in (0, 25, 50, 75, 100):
         model = build(cfg); model.load_state_dict(torch.load(OUT / f"ckpt_k{k}.pt", weights_only=True))
         floors[k] = {"B": evaluate(model, *evB), "A": evaluate(model, *evA), "P": evaluate(model, *evP)}
         print(f"  frozen k={k}%: B {floors[k]['B']:.3f} A {floors[k]['A']:.3f} P {floors[k]['P']:.3f}")
+    REG = os.environ.get("REGISTERED")            # a pre-registration commit sha, or empty
     (OUT / f"sweep_sched_a{'_full' if a.full else ''}.json").write_text(json.dumps(
-        {"exploratory": True, "seed": SEED, "adapter_steps": a.adapter_steps, "lr": 5e-4,
+        {"exploratory": not bool(REG), "registered_in": (f"MEF/docs/PREREG_H9M.md @ {REG}" if REG else None),
+         "controls_no_adapter": controls or None,
+         "seed": SEED, "adapter_steps": a.adapter_steps, "lr": 5e-4,
          "floors_frozen": floors, "arms": results,
          "note": "schedule (a) fixed adapter budget; T-mid arms co-train the base on B (moving-base regime); k=100 is frozen-base (T-post). Label rows by regime."}, indent=1))
     print("sweep saved →", OUT / f"sweep_sched_a{'_full' if a.full else ''}.json")
