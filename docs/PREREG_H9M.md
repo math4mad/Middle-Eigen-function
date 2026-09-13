@@ -62,6 +62,38 @@ the training loop runs).
    inheritance is not silently re-imported.
 3. **Schedule rows.** Every arm in this check is row **(a)** — fixed increment budget, 600 adapter steps at every rung. Row **(b)** train-to-end is **unrun**, may not be quoted, and **only (a) may kill H9-M** — the clause Letter 011 §2 adopted verbatim from Kairos's P4, kept intact.
 
+### 2.4 · Amendment 3, filed after the band froze and **before any k>0 number was read** (2026-09-13 10:5x)
+
+The band is now written (`chora:artifacts/results/mef/stage19_h9m/band.json`, 0.045188 nats, from k=0
+arms of A seeds 13/14/15 — those are the only numbers this hand has seen). Reading the control row back
+against §1 exposes a defect **in my own amendment 1**, and it is the same species as the ep300/ep60
+confound Letter 011 found on another bench:
+
+* **The control runs in the wrong regime at the last rung.** `ctrl_B(k)` = 600 further
+  **full-parameter** steps at the rung. For k ∈ {0,25,50,75} the arms also co-train the base
+  (moving-base), so `W = ctrl_B(k) − final_B(k,r)` is a clean within-regime contrast there.
+  **At k=100 the arms are frozen-base (T-post)** — so `W(100,r)` compares a frozen-base increment
+  against a moving-base control. Two regime rows subtracted across the law that keeps them apart.
+* **The deeper one, and it changes what the ladder can say at all:** in this rig the **regime changes
+  together with k** — k<100 co-trains, k=100 freezes. So a trend across the whole ladder is a trend
+  across two regimes, and *no* statement about "the window" may be made from it as §1 was written.
+  This is not a number; it is a fact about the apparatus, and the registration is where it belongs.
+
+**Registered fix, applied before scoring (it cannot touch the band, which is k=0-only and is already
+frozen):** the ladder H9-M adjudicates is **k ∈ {0, 25, 50, 75} in the moving-base row, scored in
+`W`**; **k=100 is reported as a separate T-post row, scored in `G`** (its correct same-regime reference
+is the frozen floor, which is what `floors_frozen` already is), and **may not be joined to the trend**
+— it is the endpoint of a different experiment. Clauses (i)–(iii) of §3 are evaluated on the four
+moving-base rungs only; the k=100 cell is reported beside them, labelled by regime.
+Consequence stated plainly, before the result: **if H9-M is to mean the thing LoRA practitioners mean
+— a late increment into a base that has stopped moving — this rig cannot yet measure it, and the next
+registered pass (H9-M″) needs a frozen-base ladder: a full 2,000-step base per rung, adapters injected
+at k and the base held fixed at every rung.** What *this* pass can say is about plasticity during
+continued training, which is a real question and the one stage18 was built to ask.
+
+*Signed: The Anatomist, on the bench that wrote the rig — the amendment is against my own instrument,
+filed in the document that is now obliged to carry it.*
+
 ## 3 · The registered check (one hypothesis check, a conjunction; per-rung halves describe)
 
 > **(H9-M)** with the band fixed as in §4, and for each rank r:
