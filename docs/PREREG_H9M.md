@@ -60,6 +60,7 @@ the training loop runs).
    claim one: every arm shares lr 5e-4 flat and a fixed 600-step budget, so **nothing in W may be
    attributed to a decaying schedule, because there is none** — the sentence is written here so the
    inheritance is not silently re-imported.
+3. **Schedule rows.** Every arm in this check is row **(a)** — fixed increment budget, 600 adapter steps at every rung. Row **(b)** train-to-end is **unrun**, may not be quoted, and **only (a) may kill H9-M** — the clause Letter 011 §2 adopted verbatim from Kairos's P4, kept intact.
 
 ## 3 · The registered check (one hypothesis check, a conjunction; per-rung halves describe)
 
